@@ -1,2 +1,6 @@
-# jquery_easyui_1.8.6_source_code
-jquery easyui 1.8.6代码还原未混淆，仅供学习研究用。顺便分享基于此开发的部分插件
+# 声明
+jquery easyui 1.8.6： 试图还原未混淆代码，仅供学习研究用。
+# 路径
+还原的代码位于source文件夹下，每个还原的文件名与plugins下文件对应
+# 基于此封装的插件
+位于extra文件夹下
