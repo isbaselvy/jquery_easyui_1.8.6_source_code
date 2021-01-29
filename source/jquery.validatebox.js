@@ -8,191 +8,191 @@
  *
  */
 (function ($) {
-    function _1(_2) {
-        $(_2).addClass("validatebox-text");
+    function init(target) {
+        $(target).addClass("validatebox-text");
     };
 
-    function _3(_4) {
-        var _5 = $.data(_4, "validatebox");
-        _5.validating = false;
-        if (_5.vtimer) {
-            clearTimeout(_5.vtimer);
+    function destroyBox(target) {
+        var state = $.data(target, "validatebox");
+        state.validating = false;
+        if (state.vtimer) {
+            clearTimeout(state.vtimer);
         }
-        if (_5.ftimer) {
-            clearTimeout(_5.ftimer);
+        if (state.ftimer) {
+            clearTimeout(state.ftimer);
         }
-        $(_4).tooltip("destroy");
-        $(_4).unbind();
-        $(_4).remove();
+        $(target).tooltip("destroy");
+        $(target).unbind();
+        $(target).remove();
     };
 
-    function _6(_7) {
-        var _8 = $.data(_7, "validatebox").options;
-        $(_7).unbind(".validatebox");
-        if (_8.novalidate || _8.disabled) {
+    function bindEvents(target) {
+        var opts = $.data(target, "validatebox").options;
+        $(target).unbind(".validatebox");
+        if (opts.novalidate || opts.disabled) {
             return;
         }
-        for (var _9 in _8.events) {
-            $(_7).bind(_9 + ".validatebox", {
-                target: _7
-            }, _8.events[_9]);
+        for (var event in opts.events) {
+            $(target).bind(event + ".validatebox", {
+                target: target
+            }, opts.events[event]);
         }
     };
 
-    function _a(e) {
-        var _b = e.data.target;
-        var _c = $.data(_b, "validatebox");
-        var _d = _c.options;
-        if ($(_b).attr("readonly")) {
+    function focusEventHandler(e) {
+        var target = e.data.target;
+        var state = $.data(target, "validatebox");
+        var opts = state.options;
+        if ($(target).attr("readonly")) {
             return;
         }
-        _c.validating = true;
-        _c.value = _d.val(_b);
+        state.validating = true;
+        state.value = opts.val(target);
         (function () {
-            if (!$(_b).is(":visible")) {
-                _c.validating = false;
+            if (!$(target).is(":visible")) {
+                state.validating = false;
             }
-            if (_c.validating) {
-                var _e = _d.val(_b);
-                if (_c.value != _e) {
-                    _c.value = _e;
-                    if (_c.vtimer) {
-                        clearTimeout(_c.vtimer);
+            if (state.validating) {
+                var value = opts.val(target);
+                if (state.value != value) {
+                    state.value = value;
+                    if (state.vtimer) {
+                        clearTimeout(state.vtimer);
                     }
-                    _c.vtimer = setTimeout(function () {
-                        $(_b).validatebox("validate");
-                    }, _d.delay);
+                    state.vtimer = setTimeout(function () {
+                        $(target).validatebox("validate");
+                    }, opts.delay);
                 } else {
-                    if (_c.message) {
-                        _d.err(_b, _c.message);
+                    if (state.message) {
+                        opts.err(target, state.message);
                     }
                 }
-                _c.ftimer = setTimeout(arguments.callee, _d.interval);
+                state.ftimer = setTimeout(arguments.callee, opts.interval);
             }
         })();
     };
 
-    function _f(e) {
-        var _10 = e.data.target;
-        var _11 = $.data(_10, "validatebox");
-        var _12 = _11.options;
-        _11.validating = false;
-        if (_11.vtimer) {
-            clearTimeout(_11.vtimer);
-            _11.vtimer = undefined;
+    function blurEventHandler(e) {
+        var target = e.data.target;
+        var state = $.data(target, "validatebox");
+        var opts = state.options;
+        state.validating = false;
+        if (state.vtimer) {
+            clearTimeout(state.vtimer);
+            state.vtimer = undefined;
         }
-        if (_11.ftimer) {
-            clearTimeout(_11.ftimer);
-            _11.ftimer = undefined;
+        if (state.ftimer) {
+            clearTimeout(state.ftimer);
+            state.ftimer = undefined;
         }
-        if (_12.validateOnBlur) {
+        if (opts.validateOnBlur) {
             setTimeout(function () {
-                $(_10).validatebox("validate");
+                $(target).validatebox("validate");
             }, 0);
         }
-        _12.err(_10, _11.message, "hide");
+        opts.err(target, state.message, "hide");
     };
 
-    function _13(e) {
-        var _14 = e.data.target;
-        var _15 = $.data(_14, "validatebox");
-        _15.options.err(_14, _15.message, "show");
+    function mouseenterEventHandler(e) {
+        var target = e.data.target;
+        var state = $.data(target, "validatebox");
+        state.options.err(target, state.message, "show");
     };
 
-    function _16(e) {
-        var _17 = e.data.target;
-        var _18 = $.data(_17, "validatebox");
-        if (!_18.validating) {
-            _18.options.err(_17, _18.message, "hide");
+    function mouseleaveEventHandler(e) {
+        var target = e.data.target;
+        var state = $.data(target, "validatebox");
+        if (!state.validating) {
+            state.options.err(target, state.message, "hide");
         }
     };
 
-    function _19(_1a, _1b, _1c) {
-        var _1d = $.data(_1a, "validatebox");
-        var _1e = _1d.options;
-        var t = $(_1a);
-        if (_1c == "hide" || !_1b) {
+    function handleError(target, message, action) {
+        var state = $.data(target, "validatebox");
+        var opts = state.options;
+        var t = $(target);
+        if (action == "hide" || !message) {
             t.tooltip("hide");
         } else {
-            if ((t.is(":focus") && _1d.validating) || _1c == "show") {
-                t.tooltip($.extend({}, _1e.tipOptions, {
-                    content: _1b,
-                    position: _1e.tipPosition,
-                    deltaX: _1e.deltaX,
-                    deltaY: _1e.deltaY
+            if ((t.is(":focus") && state.validating) || action == "show") {
+                t.tooltip($.extend({}, opts.tipOptions, {
+                    content: message,
+                    position: opts.tipPosition,
+                    deltaX: opts.deltaX,
+                    deltaY: opts.deltaY
                 })).tooltip("show");
             }
         }
     };
 
-    function _1f(_20) {
-        var _21 = $.data(_20, "validatebox");
-        var _22 = _21.options;
-        var box = $(_20);
-        _22.onBeforeValidate.call(_20);
-        var _23 = _24();
-        _23 ? box.removeClass("validatebox-invalid") : box.addClass("validatebox-invalid");
-        _22.err(_20, _21.message);
-        _22.onValidate.call(_20, _23);
-        return _23;
+    function validate(target) {
+        var state = $.data(target, "validatebox");
+        var opts = state.options;
+        var box = $(target);
+        opts.onBeforeValidate.call(target);
+        var result = _validate();
+        result ? box.removeClass("validatebox-invalid") : box.addClass("validatebox-invalid");
+        opts.err(target, state.message);
+        opts.onValidate.call(target, result);
+        return result;
 
-        function _25(msg) {
-            _21.message = msg;
+        function setTipMessage(msg) {
+            state.message = msg;
         };
 
-        function _26(_27, _28) {
-            var _29 = _22.val(_20);
-            var _2a = /([a-zA-Z_]+)(.*)/.exec(_27);
-            var _2b = _22.rules[_2a[1]];
-            if (_2b && _29) {
-                var _2c = _28 || _22.validParams || eval(_2a[2]);
-                if (!_2b["validator"].call(_20, _29, _2c)) {
-                    var _2d = _2b["message"];
-                    if (_2c) {
-                        for (var i = 0; i < _2c.length; i++) {
-                            _2d = _2d.replace(new RegExp("\\{" + i + "\\}", "g"), _2c[i]);
+        function doValidate(vtype, vparam) {
+            var value = opts.val(target);
+            var result = /([a-zA-Z_]+)(.*)/.exec(vtype);
+            var rule = opts.rules[result[1]];
+            if (rule && value) {
+                var param = vparam || opts.validParams || eval(result[2]);
+                if (!rule["validator"].call(target, value, param)) {
+                    var message = rule["message"];
+                    if (param) {
+                        for (var i = 0; i < param.length; i++) {
+                            message = message.replace(new RegExp("\\{" + i + "\\}", "g"), param[i]);
                         }
                     }
-                    _25(_22.invalidMessage || _2d);
+                    setTipMessage(opts.invalidMessage || message);
                     return false;
                 }
             }
             return true;
         };
 
-        function _24() {
-            _25("");
-            if (!_22._validateOnCreate) {
+        function _validate() {
+            setTipMessage("");
+            if (!opts._validateOnCreate) {
                 setTimeout(function () {
-                    _22._validateOnCreate = true;
+                    opts._validateOnCreate = true;
                 }, 0);
                 return true;
             }
-            if (_22.novalidate || _22.disabled) {
+            if (opts.novalidate || opts.disabled) {
                 return true;
             }
-            if (_22.required) {
-                if (_22.val(_20) == "") {
-                    _25(_22.missingMessage);
+            if (opts.required) {
+                if (opts.val(target) == "") {
+                    setTipMessage(opts.missingMessage);
                     return false;
                 }
             }
-            if (_22.validType) {
-                if ($.isArray(_22.validType)) {
-                    for (var i = 0; i < _22.validType.length; i++) {
-                        if (!_26(_22.validType[i])) {
+            if (opts.validType) {
+                if ($.isArray(opts.validType)) {
+                    for (var i = 0; i < opts.validType.length; i++) {
+                        if (!doValidate(opts.validType[i])) {
                             return false;
                         }
                     }
                 } else {
-                    if (typeof _22.validType == "string") {
-                        if (!_26(_22.validType)) {
+                    if (typeof opts.validType == "string") {
+                        if (!doValidate(opts.validType)) {
                             return false;
                         }
                     } else {
-                        for (var _2e in _22.validType) {
-                            var _2f = _22.validType[_2e];
-                            if (!_26(_2e, _2f)) {
+                        for (var vtype in opts.validType) {
+                            var vparam = opts.validType[vtype];
+                            if (!doValidate(vtype, vparam)) {
                                 return false;
                             }
                         }
@@ -203,48 +203,48 @@
         };
     };
 
-    function _30(_31, _32) {
-        var _33 = $.data(_31, "validatebox").options;
-        if (_32 != undefined) {
-            _33.disabled = _32;
+    function setDisabled(target, disabled) {
+        var opts = $.data(target, "validatebox").options;
+        if (disabled != undefined) {
+            opts.disabled = disabled;
         }
-        if (_33.disabled) {
-            $(_31).addClass("validatebox-disabled")._propAttr("disabled", true);
+        if (opts.disabled) {
+            $(target).addClass("validatebox-disabled")._propAttr("disabled", true);
         } else {
-            $(_31).removeClass("validatebox-disabled")._propAttr("disabled", false);
+            $(target).removeClass("validatebox-disabled")._propAttr("disabled", false);
         }
     };
 
-    function _34(_35, _36) {
-        var _37 = $.data(_35, "validatebox").options;
-        _37.readonly = _36 == undefined ? true : _36;
-        if (_37.readonly || !_37.editable) {
-            $(_35).triggerHandler("blur.validatebox");
-            $(_35).addClass("validatebox-readonly")._propAttr("readonly", true);
+    function setReadonly(target, mode) {
+        var opts = $.data(target, "validatebox").options;
+        opts.readonly = mode == undefined ? true : mode;
+        if (opts.readonly || !opts.editable) {
+            $(target).triggerHandler("blur.validatebox");
+            $(target).addClass("validatebox-readonly")._propAttr("readonly", true);
         } else {
-            $(_35).removeClass("validatebox-readonly")._propAttr("readonly", false);
+            $(target).removeClass("validatebox-readonly")._propAttr("readonly", false);
         }
     };
-    $.fn.validatebox = function (_38, _39) {
-        if (typeof _38 == "string") {
-            return $.fn.validatebox.methods[_38](this, _39);
+    $.fn.validatebox = function (options, param) {
+        if (typeof options == "string") {
+            return $.fn.validatebox.methods[options](this, param);
         }
-        _38 = _38 || {};
+        options = options || {};
         return this.each(function () {
-            var _3a = $.data(this, "validatebox");
-            if (_3a) {
-                $.extend(_3a.options, _38);
+            var state = $.data(this, "validatebox");
+            if (state) {
+                $.extend(state.options, options);
             } else {
-                _1(this);
-                _3a = $.data(this, "validatebox", {
-                    options: $.extend({}, $.fn.validatebox.defaults, $.fn.validatebox.parseOptions(this), _38)
+                init(this);
+                state = $.data(this, "validatebox", {
+                    options: $.extend({}, $.fn.validatebox.defaults, $.fn.validatebox.parseOptions(this), options)
                 });
             }
-            _3a.options._validateOnCreate = _3a.options.validateOnCreate;
-            _30(this, _3a.options.disabled);
-            _34(this, _3a.options.readonly);
-            _6(this);
-            _1f(this);
+            state.options._validateOnCreate = state.options.validateOnCreate;
+            setDisabled(this, state.options.disabled);
+            setReadonly(this, state.options.readonly);
+            bindEvents(this);
+            validate(this);
         });
     };
     $.fn.validatebox.methods = {
@@ -253,63 +253,63 @@
         },
         destroy: function (jq) {
             return jq.each(function () {
-                _3(this);
+                destroyBox(this);
             });
         },
         validate: function (jq) {
             return jq.each(function () {
-                _1f(this);
+                validate(this);
             });
         },
         isValid: function (jq) {
-            return _1f(jq[0]);
+            return validate(jq[0]);
         },
         enableValidation: function (jq) {
             return jq.each(function () {
                 $(this).validatebox("options").novalidate = false;
-                _6(this);
-                _1f(this);
+                bindEvents(this);
+                validate(this);
             });
         },
         disableValidation: function (jq) {
             return jq.each(function () {
                 $(this).validatebox("options").novalidate = true;
-                _6(this);
-                _1f(this);
+                bindEvents(this);
+                validate(this);
             });
         },
         resetValidation: function (jq) {
             return jq.each(function () {
-                var _3b = $(this).validatebox("options");
-                _3b._validateOnCreate = _3b.validateOnCreate;
-                _1f(this);
+                var opts = $(this).validatebox("options");
+                opts._validateOnCreate = opts.validateOnCreate;
+                validate(this);
             });
         },
         enable: function (jq) {
             return jq.each(function () {
-                _30(this, false);
-                _6(this);
-                _1f(this);
+                setDisabled(this, false);
+                bindEvents(this);
+                validate(this);
             });
         },
         disable: function (jq) {
             return jq.each(function () {
-                _30(this, true);
-                _6(this);
-                _1f(this);
+                setDisabled(this, true);
+                bindEvents(this);
+                validate(this);
             });
         },
-        readonly: function (jq, _3c) {
+        readonly: function (jq, mode) {
             return jq.each(function () {
-                _34(this, _3c);
-                _6(this);
-                _1f(this);
+                setReadonly(this, mode);
+                bindEvents(this);
+                validate(this);
             });
         }
     };
-    $.fn.validatebox.parseOptions = function (_3d) {
-        var t = $(_3d);
-        return $.extend({}, $.parser.parseOptions(_3d, ["validType", "missingMessage", "invalidMessage", "tipPosition", {
+    $.fn.validatebox.parseOptions = function (target) {
+        var t = $(target);
+        return $.extend({}, $.parser.parseOptions(target, ["validType", "missingMessage", "invalidMessage", "tipPosition", {
             delay: "number",
             interval: "number",
             deltaX: "number"
@@ -342,10 +342,10 @@
         validateOnCreate: true,
         validateOnBlur: false,
         events: {
-            focus: _a,
-            blur: _f,
-            mouseenter: _13,
-            mouseleave: _16,
+            focus: focusEventHandler,
+            blur: blurEventHandler,
+            mouseenter: mouseenterEventHandler,
+            mouseleave: mouseleaveEventHandler,
             click: function (e) {
                 var t = $(e.data.target);
                 if (t.attr("type") == "checkbox" || t.attr("type") == "radio") {
@@ -353,11 +353,11 @@
                 }
             }
         },
-        val: function (_3e) {
-            return $(_3e).val();
+        val: function (target) {
+            return $(target).val();
         },
-        err: function (_3f, _40, _41) {
-            _19(_3f, _40, _41);
+        err: function (target, message, action) {
+            handleError(target, message, action);
         },
         tipOptions: {
             showEvent: "none",
@@ -378,42 +378,42 @@
         },
         rules: {
             email: {
-                validator: function (_42) {
-                    return /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i.test(_42);
+                validator: function (value) {
+                    return /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i.test(value);
                 },
                 message: "Please enter a valid email address."
             },
             url: {
-                validator: function (_43) {
-                    return /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(_43);
+                validator: function (value) {
+                    return /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(value);
                 },
                 message: "Please enter a valid URL."
             },
             length: {
-                validator: function (_44, _45) {
-                    var len = $.trim(_44).length;
-                    return len >= _45[0] && len <= _45[1];
+                validator: function (value, param) {
+                    var len = $.trim(value).length;
+                    return len >= param[0] && len <= param[1];
                 },
                 message: "Please enter a value between {0} and {1}."
             },
             remote: {
-                validator: function (_46, _47) {
-                    var _48 = {};
-                    _48[_47[1]] = _46;
-                    var _49 = $.ajax({
-                        url: _47[0],
+                validator: function (value, param) {
+                    var data = {};
+                    data[param[1]] = value;
+                    var response = $.ajax({
+                        url: param[0],
                         dataType: "json",
-                        data: _48,
+                        data: data,
                         async: false,
                         cache: false,
                         type: "post"
                     }).responseText;
-                    return _49 == "true";
+                    return response == "true";
                 },
                 message: "Please fix this field."
             }
         },
         onBeforeValidate: function () {},
-        onValidate: function (_4a) {}
+        onValidate: function (valid) {}
     };
 })(jQuery);
