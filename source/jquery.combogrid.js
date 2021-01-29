@@ -8,350 +8,350 @@
  *
  */
 (function ($) {
-    function _1(_2) {
-        var _3 = $.data(_2, "combogrid");
-        var _4 = _3.options;
-        var _5 = _3.grid;
-        $(_2).addClass("combogrid-f").combo($.extend({}, _4, {
+    function create(target) {
+        var state = $.data(target, "combogrid");
+        var opts = state.options;
+        var grid = state.grid;
+        $(target).addClass("combogrid-f").combo($.extend({}, opts, {
             onShowPanel: function () {
-                _22(this, $(this).combogrid("getValues"), true);
+                setValues(this, $(this).combogrid("getValues"), true);
                 var p = $(this).combogrid("panel");
-                var _6 = p.outerHeight() - p.height();
-                var _7 = p._size("minHeight");
-                var _8 = p._size("maxHeight");
+                var distance = p.outerHeight() - p.height();
+                var minHeight = p._size("minHeight");
+                var maxHeight = p._size("maxHeight");
                 var dg = $(this).combogrid("grid");
                 dg.datagrid("resize", {
                     width: "100%",
-                    height: (isNaN(parseInt(_4.panelHeight)) ? "auto" : "100%"),
-                    minHeight: (_7 ? _7 - _6 : ""),
-                    maxHeight: (_8 ? _8 - _6 : "")
+                    height: (isNaN(parseInt(opts.panelHeight)) ? "auto" : "100%"),
+                    minHeight: (minHeight ? minHeight - distance : ""),
+                    maxHeight: (maxHeight ? maxHeight - distance : "")
                 });
-                var _9 = dg.datagrid("getSelected");
-                if (_9) {
-                    dg.datagrid("scrollTo", dg.datagrid("getRowIndex", _9));
+                var row = dg.datagrid("getSelected");
+                if (row) {
+                    dg.datagrid("scrollTo", dg.datagrid("getRowIndex", row));
                 }
-                _4.onShowPanel.call(this);
+                opts.onShowPanel.call(this);
             }
         }));
-        var _a = $(_2).combo("panel");
-        if (!_5) {
-            _5 = $("<table></table>").appendTo(_a);
-            _3.grid = _5;
+        var panel = $(target).combo("panel");
+        if (!grid) {
+            grid = $("<table></table>").appendTo(panel);
+            state.grid = grid;
         }
-        _5.datagrid($.extend({}, _4, {
+        grid.datagrid($.extend({}, opts, {
             border: false,
-            singleSelect: (!_4.multiple),
-            onLoadSuccess: _b,
-            onClickRow: _c,
-            onSelect: _d("onSelect"),
-            onUnselect: _d("onUnselect"),
-            onSelectAll: _d("onSelectAll"),
-            onUnselectAll: _d("onUnselectAll")
+            singleSelect: (!opts.multiple),
+            onLoadSuccess: onLoadSuccess,
+            onClickRow: onClickRow,
+            onSelect: handleEvent("onSelect"),
+            onUnselect: handleEvent("onUnselect"),
+            onSelectAll: handleEvent("onSelectAll"),
+            onUnselectAll: handleEvent("onUnselectAll")
         }));
 
-        function _e(dg) {
-            return $(dg).closest(".combo-panel").panel("options").comboTarget || _2;
+        function getComboTarget(dg) {
+            return $(dg).closest(".combo-panel").panel("options").comboTarget || target;
         };
 
-        function _b(_f) {
-            var _10 = _e(this);
-            var _11 = $(_10).data("combogrid");
-            var _12 = _11.options;
-            var _13 = $(_10).combo("getValues");
-            _22(_10, _13, _11.remainText);
-            _12.onLoadSuccess.call(this, _f);
+        function onLoadSuccess(data) {
+            var comboTarget = getComboTarget(this);
+            var state = $(comboTarget).data("combogrid");
+            var opts = state.options;
+            var values = $(comboTarget).combo("getValues");
+            setValues(comboTarget, values, state.remainText);
+            opts.onLoadSuccess.call(this, data);
         };
 
-        function _c(_14, row) {
-            var _15 = _e(this);
-            var _16 = $(_15).data("combogrid");
-            var _17 = _16.options;
-            _16.remainText = false;
-            _18.call(this);
-            if (!_17.multiple) {
-                $(_15).combo("hidePanel");
+        function onClickRow(index, row) {
+            var comboTarget = getComboTarget(this);
+            var state = $(comboTarget).data("combogrid");
+            var opts = state.options;
+            state.remainText = false;
+            retrieveValues.call(this);
+            if (!opts.multiple) {
+                $(comboTarget).combo("hidePanel");
             }
-            _17.onClickRow.call(this, _14, row);
+            opts.onClickRow.call(this, index, row);
         };
 
-        function _d(_19) {
-            return function (_1a, row) {
-                var _1b = _e(this);
-                var _1c = $(_1b).combogrid("options");
-                if (_19 == "onUnselectAll") {
-                    if (_1c.multiple) {
-                        _18.call(this);
+        function handleEvent(event) {
+            return function (index, row) {
+                var comboTarget = getComboTarget(this);
+                var opts = $(comboTarget).combogrid("options");
+                if (event == "onUnselectAll") {
+                    if (opts.multiple) {
+                        retrieveValues.call(this);
                     }
                 } else {
-                    _18.call(this);
+                    retrieveValues.call(this);
                 }
-                _1c[_19].call(this, _1a, row);
+                opts[event].call(this, index, row);
             };
         };
 
-        function _18() {
+        function retrieveValues() {
             var dg = $(this);
-            var _1d = _e(dg);
-            var _1e = $(_1d).data("combogrid");
-            var _1f = _1e.options;
+            var comboTarget = getComboTarget(dg);
+            var state = $(comboTarget).data("combogrid");
+            var opts = state.options;
             var vv = $.map(dg.datagrid("getSelections"), function (row) {
-                return row[_1f.idField];
+                return row[opts.idField];
             });
-            vv = vv.concat(_1f.unselectedValues);
-            var _20 = dg.data("datagrid").dc.body2;
-            var _21 = _20.scrollTop();
-            _22(_1d, vv, _1e.remainText);
-            _20.scrollTop(_21);
+            vv = vv.concat(opts.unselectedValues);
+            var dcbody = dg.data("datagrid").dc.body2;
+            var top = dcbody.scrollTop();
+            setValues(comboTarget, vv, state.remainText);
+            dcbody.scrollTop(top);
         };
     };
 
-    function nav(_23, dir) {
-        var _24 = $.data(_23, "combogrid");
-        var _25 = _24.options;
-        var _26 = _24.grid;
-        var _27 = _26.datagrid("getRows").length;
-        if (!_27) {
+    function nav(target, dir) {
+        var state = $.data(target, "combogrid");
+        var opts = state.options;
+        var grid = state.grid;
+        var rowCount = grid.datagrid("getRows").length;
+        if (!rowCount) {
             return;
         }
-        var tr = _25.finder.getTr(_26[0], null, "highlight");
+        var tr = opts.finder.getTr(grid[0], null, "highlight");
         if (!tr.length) {
-            tr = _25.finder.getTr(_26[0], null, "selected");
+            tr = opts.finder.getTr(grid[0], null, "selected");
         }
-        var _28;
+        var index;
         if (!tr.length) {
-            _28 = (dir == "next" ? 0 : _27 - 1);
+            index = (dir == "next" ? 0 : rowCount - 1);
         } else {
-            var _28 = parseInt(tr.attr("datagrid-row-index"));
-            _28 += (dir == "next" ? 1 : -1);
-            if (_28 < 0) {
-                _28 = _27 - 1;
+            var index = parseInt(tr.attr("datagrid-row-index"));
+            index += (dir == "next" ? 1 : -1);
+            if (index < 0) {
+                index = rowCount - 1;
             }
-            if (_28 >= _27) {
-                _28 = 0;
+            if (index >= rowCount) {
+                index = 0;
             }
         }
-        _26.datagrid("highlightRow", _28);
-        if (_25.selectOnNavigation) {
-            _24.remainText = false;
-            _26.datagrid("selectRow", _28);
+        grid.datagrid("highlightRow", index);
+        if (opts.selectOnNavigation) {
+            state.remainText = false;
+            grid.datagrid("selectRow", index);
         }
     };
 
-    function _22(_29, _2a, _2b) {
-        var _2c = $.data(_29, "combogrid");
-        var _2d = _2c.options;
-        var _2e = _2c.grid;
-        var _2f = $(_29).combo("getValues");
-        var _30 = $(_29).combo("options");
-        var _31 = _30.onChange;
-        _30.onChange = function () {};
-        var _32 = _2e.datagrid("options");
-        var _33 = _32.onSelect;
-        var _34 = _32.onUnselectAll;
-        _32.onSelect = _32.onUnselectAll = function () {};
-        if (!$.isArray(_2a)) {
-            _2a = _2a.split(_2d.separator);
+    function setValues(target, values, remainText) {
+        var state = $.data(target, "combogrid");
+        var opts = state.options;
+        var grid = state.grid;
+        var oldValues = $(target).combo("getValues");
+        var cOpts = $(target).combo("options");
+        var onChange = cOpts.onChange;
+        cOpts.onChange = function () {};
+        var gOpts = grid.datagrid("options");
+        var onSelect = gOpts.onSelect;
+        var onUnselectAll = gOpts.onUnselectAll;
+        gOpts.onSelect = gOpts.onUnselectAll = function () {};
+        if (!$.isArray(values)) {
+            values = values.split(opts.separator);
         }
-        if (!_2d.multiple) {
-            _2a = _2a.length ? [_2a[0]] : [""];
+        if (!opts.multiple) {
+            values = values.length ? [values[0]] : [""];
         }
-        var vv = $.map(_2a, function (_35) {
+        var vv = $.map(values, function (_35) {
             return String(_35);
         });
         vv = $.grep(vv, function (v, _36) {
             return _36 === $.inArray(v, vv);
         });
-        var _37 = $.grep(_2e.datagrid("getSelections"), function (row, _38) {
-            return $.inArray(String(row[_2d.idField]), vv) >= 0;
+        var selectedRows = $.grep(grid.datagrid("getSelections"), function (row, index) {
+            return $.inArray(String(row[opts.idField]), vv) >= 0;
         });
-        _2e.datagrid("clearSelections");
-        _2e.data("datagrid").selectedRows = _37;
+        grid.datagrid("clearSelections");
+        grid.data("datagrid").selectedRows = selectedRows;
         var ss = [];
-        _2d.unselectedValues = [];
+        opts.unselectedValues = [];
         $.map(vv, function (v) {
-            var _39 = _2e.datagrid("getRowIndex", v);
-            if (_39 >= 0) {
-                _2e.datagrid("selectRow", _39);
+            var index = grid.datagrid("getRowIndex", v);
+            if (index >= 0) {
+                grid.datagrid("selectRow", index);
             } else {
-                _2d.unselectedValues.push(v);
+                opts.unselectedValues.push(v);
             }
-            ss.push(_3a(v, _2e.datagrid("getRows")) || _3a(v, _37) || _3a(v, _2d.mappingRows) || v);
+            ss.push(findText(v, grid.datagrid("getRows")) || findText(v, selectedRows) || findText(v, opts.mappingRows) || v);
         });
-        $(_29).combo("setValues", _2f);
-        _30.onChange = _31;
-        _32.onSelect = _33;
-        _32.onUnselectAll = _34;
-        if (!_2b) {
-            var s = ss.join(_2d.separator);
-            if ($(_29).combo("getText") != s) {
-                $(_29).combo("setText", s);
+        $(target).combo("setValues", oldValues);
+        cOpts.onChange = onChange;
+        gOpts.onSelect = onSelect;
+        gOpts.onUnselectAll = onUnselectAll;
+        if (!remainText) {
+            var s = ss.join(opts.separator);
+            if ($(target).combo("getText") != s) {
+                $(target).combo("setText", s);
             }
         }
-        $(_29).combo("setValues", _2a);
+        $(target).combo("setValues", values);
 
-        function _3a(_3b, a) {
-            var _3c = $.easyui.getArrayItem(a, _2d.idField, _3b);
-            return _3c ? _3c[_2d.textField] : undefined;
+        function findText(value, a) {
+            var item = $.easyui.getArrayItem(a, opts.idField, value);
+            return item ? item[opts.textField] : undefined;
         };
     };
 
-    function _3d(_3e, q) {
-        var _3f = $.data(_3e, "combogrid");
-        var _40 = _3f.options;
-        var _41 = _3f.grid;
-        _3f.remainText = true;
-        var qq = _40.multiple ? q.split(_40.separator) : [q];
+    function doQuery(target, q) {
+        var state = $.data(target, "combogrid");
+        var opts = state.options;
+        var grid = state.grid;
+        state.remainText = true;
+        var qq = opts.multiple ? q.split(opts.separator) : [q];
         qq = $.grep(qq, function (q) {
             return $.trim(q) != "";
         });
-        if (_40.mode == "remote") {
-            _42(qq);
-            _41.datagrid("load", $.extend({}, _40.queryParams, {
+        if (opts.mode == "remote") {
+            _setValues(qq);
+            grid.datagrid("load", $.extend({}, opts.queryParams, {
                 q: q
             }));
         } else {
-            _41.datagrid("highlightRow", -1);
-            var _43 = _41.datagrid("getRows");
+            grid.datagrid("highlightRow", -1);
+            var rows = grid.datagrid("getRows");
             var vv = [];
             $.map(qq, function (q) {
                 q = $.trim(q);
-                var _44 = q;
-                _45(_40.mappingRows, q);
-                _45(_41.datagrid("getSelections"), q);
-                var _46 = _45(_43, q);
-                if (_46 >= 0) {
-                    if (_40.reversed) {
-                        _41.datagrid("highlightRow", _46);
+                var value = q;
+                _addRowValue(opts.mappingRows, q);
+                _addRowValue(grid.datagrid("getSelections"), q);
+                var index = _addRowValue(rows, q);
+                if (index >= 0) {
+                    if (opts.reversed) {
+                        grid.datagrid("highlightRow", index);
                     }
                 } else {
-                    $.map(_43, function (row, i) {
-                        if (_40.filter.call(_3e, q, row)) {
-                            _41.datagrid("highlightRow", i);
+                    $.map(rows, function (row, i) {
+                        if (opts.filter.call(target, q, row)) {
+                            grid.datagrid("highlightRow", i);
                         }
                     });
                 }
             });
-            _42(vv);
+            _setValues(vv);
         }
 
-        function _45(_47, q) {
-            for (var i = 0; i < _47.length; i++) {
-                var row = _47[i];
-                if ((row[_40.textField] || "").toLowerCase() == q.toLowerCase()) {
-                    vv.push(row[_40.idField]);
+        function _addRowValue(rows, q) {
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                if ((row[opts.textField] || "").toLowerCase() == q.toLowerCase()) {
+                    vv.push(row[opts.idField]);
                     return i;
                 }
             }
             return -1;
         };
 
-        function _42(vv) {
-            if (!_40.reversed) {
-                _22(_3e, vv, true);
+        function _setValues(vv) {
+            if (!opts.reversed) {
+                setValues(target, vv, true);
             }
         };
     };
 
-    function _48(_49) {
-        var _4a = $.data(_49, "combogrid");
-        var _4b = _4a.options;
-        var _4c = _4a.grid;
-        var tr = _4b.finder.getTr(_4c[0], null, "highlight");
-        _4a.remainText = false;
+    function doEnter(target) {
+        var state = $.data(target, "combogrid");
+        var opts = state.options;
+        var grid = state.grid;
+        var tr = opts.finder.getTr(grid[0], null, "highlight");
+        state.remainText = false;
         if (tr.length) {
-            var _4d = parseInt(tr.attr("datagrid-row-index"));
-            if (_4b.multiple) {
+            var index = parseInt(tr.attr("datagrid-row-index"));
+            if (opts.multiple) {
                 if (tr.hasClass("datagrid-row-selected")) {
-                    _4c.datagrid("unselectRow", _4d);
+                    grid.datagrid("unselectRow", index);
                 } else {
-                    _4c.datagrid("selectRow", _4d);
+                    grid.datagrid("selectRow", index);
                 }
             } else {
-                _4c.datagrid("selectRow", _4d);
+                grid.datagrid("selectRow", index);
             }
         }
         var vv = [];
-        $.map(_4c.datagrid("getSelections"), function (row) {
-            vv.push(row[_4b.idField]);
+        $.map(grid.datagrid("getSelections"), function (row) {
+            vv.push(row[opts.idField]);
         });
-        $.map(_4b.unselectedValues, function (v) {
-            if ($.easyui.indexOfArray(_4b.mappingRows, _4b.idField, v) >= 0) {
+        $.map(opts.unselectedValues, function (v) {
+            if ($.easyui.indexOfArray(opts.mappingRows, opts.idField, v) >= 0) {
                 $.easyui.addArrayItem(vv, v);
             }
         });
-        $(_49).combogrid("setValues", vv);
-        if (!_4b.multiple) {
-            $(_49).combogrid("hidePanel");
+        $(target).combogrid("setValues", vv);
+        if (!opts.multiple) {
+            $(target).combogrid("hidePanel");
         }
     };
-    $.fn.combogrid = function (_4e, _4f) {
-        if (typeof _4e == "string") {
-            var _50 = $.fn.combogrid.methods[_4e];
-            if (_50) {
-                return _50(this, _4f);
+    $.fn.combogrid = function (options, param) {
+        if (typeof options == "string") {
+            var method = $.fn.combogrid.methods[options];
+            if (method) {
+                return method(this, param);
             } else {
-                return this.combo(_4e, _4f);
+                return this.combo(options, param);
             }
         }
-        _4e = _4e || {};
+        options = options || {};
         return this.each(function () {
-            var _51 = $.data(this, "combogrid");
-            if (_51) {
-                $.extend(_51.options, _4e);
+            var state = $.data(this, "combogrid");
+            if (state) {
+                $.extend(state.options, options);
             } else {
-                _51 = $.data(this, "combogrid", {
-                    options: $.extend({}, $.fn.combogrid.defaults, $.fn.combogrid.parseOptions(this), _4e)
+                state = $.data(this, "combogrid", {
+                    options: $.extend({}, $.fn.combogrid.defaults, $.fn.combogrid.parseOptions(this), options)
                 });
             }
-            _1(this);
+            create(this);
         });
     };
     $.fn.combogrid.methods = {
         options: function (jq) {
-            var _52 = jq.combo("options");
+            var copts = jq.combo("options");
             return $.extend($.data(jq[0], "combogrid").options, {
-                width: _52.width,
-                height: _52.height,
-                originalValue: _52.originalValue,
-                disabled: _52.disabled,
-                readonly: _52.readonly
+                width: copts.width,
+                height: copts.height,
+                originalValue: copts.originalValue,
+                disabled: copts.disabled,
+                readonly: copts.readonly
             });
         },
-        cloneFrom: function (jq, _53) {
+        cloneFrom: function (jq, from) {
             return jq.each(function () {
-                $(this).combo("cloneFrom", _53);
+                $(this).combo("cloneFrom", from);
                 $.data(this, "combogrid", {
                     options: $.extend(true, {
                         cloned: true
-                    }, $(_53).combogrid("options")),
+                    }, $(from).combogrid("options")),
                     combo: $(this).next(),
-                    panel: $(_53).combo("panel"),
-                    grid: $(_53).combogrid("grid")
+                    panel: $(from).combo("panel"),
+                    grid: $(from).combogrid("grid")
                 });
             });
         },
         grid: function (jq) {
             return $.data(jq[0], "combogrid").grid;
         },
-        setValues: function (jq, _54) {
+        setValues: function (jq, values) {
             return jq.each(function () {
-                var _55 = $(this).combogrid("options");
-                if ($.isArray(_54)) {
-                    _54 = $.map(_54, function (_56) {
-                        if (_56 && typeof _56 == "object") {
-                            $.easyui.addArrayItem(_55.mappingRows, _55.idField, _56);
-                            return _56[_55.idField];
+                var opts = $(this).combogrid("options");
+                if ($.isArray(values)) {
+                    values = $.map(values, function (value) {
+                        if (value && typeof value == "object") {
+                            $.easyui.addArrayItem(opts.mappingRows, opts.idField, value);
+                            return value[opts.idField];
                         } else {
-                            return _56;
+                            return value;
                         }
                     });
                 }
-                _22(this, _54);
+                setValues(this, values);
             });
         },
-        setValue: function (jq, _57) {
+        setValue: function (jq, value) {
             return jq.each(function () {
-                $(this).combogrid("setValues", $.isArray(_57) ? _57 : [_57]);
+                $(this).combogrid("setValues", $.isArray(value) ? value : [value]);
             });
         },
         clear: function (jq) {
@@ -361,18 +361,18 @@
         },
         reset: function (jq) {
             return jq.each(function () {
-                var _58 = $(this).combogrid("options");
-                if (_58.multiple) {
-                    $(this).combogrid("setValues", _58.originalValue);
+                var opts = $(this).combogrid("options");
+                if (opts.multiple) {
+                    $(this).combogrid("setValues", opts.originalValue);
                 } else {
-                    $(this).combogrid("setValue", _58.originalValue);
+                    $(this).combogrid("setValue", opts.originalValue);
                 }
             });
         }
     };
-    $.fn.combogrid.parseOptions = function (_59) {
-        var t = $(_59);
-        return $.extend({}, $.fn.combo.parseOptions(_59), $.fn.datagrid.parseOptions(_59), $.parser.parseOptions(_59, ["idField", "textField", "mode"]));
+    $.fn.combogrid.parseOptions = function (target) {
+        var t = $(target);
+        return $.extend({}, $.fn.combo.parseOptions(target), $.fn.datagrid.parseOptions(target), $.parser.parseOptions(target, ["idField", "textField", "mode"]));
     };
     $.fn.combogrid.defaults = $.extend({}, $.fn.combo.defaults, $.fn.datagrid.defaults, {
         loadMsg: null,
@@ -393,10 +393,10 @@
             left: function (e) {},
             right: function (e) {},
             enter: function (e) {
-                _48(this);
+                doEnter(this);
             },
             query: function (q, e) {
-                _3d(this, q);
+                doQuery(this, q);
             }
         },
         inputEvents: $.extend({}, $.fn.combo.defaults.inputEvents, {
@@ -413,8 +413,8 @@
             mousedown: function (e) {}
         },
         filter: function (q, row) {
-            var _5c = $(this).combogrid("options");
-            return (row[_5c.textField] || "").toLowerCase().indexOf(q.toLowerCase()) >= 0;
+            var opts = $(this).combogrid("options");
+            return (row[opts.textField] || "").toLowerCase().indexOf(q.toLowerCase()) >= 0;
         }
     });
 })(jQuery);
