@@ -8,272 +8,276 @@
  *
  */
 (function ($) {
-    var _1 = 0;
+    var DATAGRID_SERNO = 0;
 
-    function _2(a, o) {
+    function indexOfArray(a, o) {
         return $.easyui.indexOfArray(a, o);
     };
 
-    function _3(a, o, id) {
+    function removeArrayItem(a, o, id) {
         $.easyui.removeArrayItem(a, o, id);
     };
 
-    function _4(a, o, r) {
+    function addArrayItem(a, o, r) {
         $.easyui.addArrayItem(a, o, r);
     };
 
-    function _5(_6, aa) {
-        return $.data(_6, "treegrid") ? aa.slice(1) : aa;
+    function getArguments(target, aa) {
+        return $.data(target, "treegrid") ? aa.slice(1) : aa;
     };
 
-    function createStyleSheet(_8) {
-        var _9 = $.data(_8, "datagrid");
-        var _a = _9.options;
-        var _b = _9.panel;
-        var dc = _9.dc;
+    function createStyleSheet(target) {
+        var dgState = $.data(target, "datagrid");
+        var opts = dgState.options;
+        var panel = dgState.panel;
+        var dc = dgState.dc;
         var ss = null;
-        if (_a.sharedStyleSheet) {
-            ss = typeof _a.sharedStyleSheet == "boolean" ? "head" : _a.sharedStyleSheet;
+        if (opts.sharedStyleSheet) {
+            ss = typeof opts.sharedStyleSheet == "boolean" ? "head" : opts.sharedStyleSheet;
         } else {
-            ss = _b.closest("div.datagrid-view");
+            ss = panel.closest("div.datagrid-view");
             if (!ss.length) {
                 ss = dc.view;
             }
         }
         var cc = $(ss);
-        var _c = $.data(cc[0], "ss");
-        if (!_c) {
-            _c = $.data(cc[0], "ss", {
+        var state = $.data(cc[0], "ss");
+        if (!state) {
+            state = $.data(cc[0], "ss", {
                 cache: {},
                 dirty: []
             });
         }
         return {
-            add: function (_d) {
+            add: function (lines) {
                 var ss = ["<style type=\"text/css\" easyui=\"true\">"];
-                for (var i = 0; i < _d.length; i++) {
-                    _c.cache[_d[i][0]] = {
-                        width: _d[i][1]
+                for (var i = 0; i < lines.length; i++) {
+                    state.cache[lines[i][0]] = {
+                        width: lines[i][1]
                     };
                 }
-                var _e = 0;
-                for (var s in _c.cache) {
-                    var _f = _c.cache[s];
-                    _f.index = _e++;
-                    ss.push(s + "{width:" + _f.width + "}");
+                var index = 0;
+                for (var s in state.cache) {
+                    var item = state.cache[s];
+                    item.index = index++;
+                    ss.push(s + "{width:" + item.width + "}");
                 }
                 ss.push("</style>");
                 $(ss.join("\n")).appendTo(cc);
                 cc.children("style[easyui]:not(:last)").remove();
             },
-            getRule: function (_10) {
-                var _11 = cc.children("style[easyui]:last")[0];
-                var _12 = _11.styleSheet ? _11.styleSheet : (_11.sheet || document.styleSheets[document.styleSheets.length - 1]);
-                var _13 = _12.cssRules || _12.rules;
-                return _13[_10];
+            getRule: function (index) {
+                var style = cc.children("style[easyui]:last")[0];
+                var styleSheet = style.styleSheet ? style.styleSheet : (style.sheet || document.styleSheets[document.styleSheets.length - 1]);
+                var rules = styleSheet.cssRules || styleSheet.rules;
+                return rules[index];
             },
-            set: function (_14, _15) {
-                var _16 = _c.cache[_14];
-                if (_16) {
-                    _16.width = _15;
-                    var _17 = this.getRule(_16.index);
-                    if (_17) {
-                        _17.style["width"] = _15;
+            set: function (selector, width) {
+                var item = state.cache[selector];
+                if (item) {
+                    item.width = width;
+                    var rule = this.getRule(item.index);
+                    if (rule) {
+                        rule.style["width"] = width;
                     }
                 }
             },
-            remove: function (_18) {
+            remove: function (selector) {
                 var tmp = [];
-                for (var s in _c.cache) {
-                    if (s.indexOf(_18) == -1) {
-                        tmp.push([s, _c.cache[s].width]);
+                for (var s in state.cache) {
+                    if (s.indexOf(selector) == -1) {
+                        tmp.push([s, state.cache[s].width]);
                     }
                 }
-                _c.cache = {};
+                state.cache = {};
                 this.add(tmp);
             },
-            dirty: function (_19) {
-                if (_19) {
-                    _c.dirty.push(_19);
+            dirty: function (selector) {
+                if (selector) {
+                    state.dirty.push(selector);
                 }
             },
             clean: function () {
-                for (var i = 0; i < _c.dirty.length; i++) {
-                    this.remove(_c.dirty[i]);
+                for (var i = 0; i < state.dirty.length; i++) {
+                    this.remove(state.dirty[i]);
                 }
-                _c.dirty = [];
+                state.dirty = [];
             }
         };
     };
 
-    function setSize(_1b, _1c) {
-        var _1d = $.data(_1b, "datagrid");
-        var _1e = _1d.options;
-        var _1f = _1d.panel;
-        if (_1c) {
-            $.extend(_1e, _1c);
+    function setSize(target, param) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var panel = state.panel;
+        if (param) {
+            $.extend(opts, param);
         }
-        if (_1e.fit == true) {
-            var p = _1f.panel("panel").parent();
-            _1e.width = p.width();
-            _1e.height = p.height();
+        if (opts.fit == true) {
+            var p = panel.panel("panel").parent();
+            opts.width = p.width();
+            opts.height = p.height();
         }
-        _1f.panel("resize", _1e);
+        panel.panel("resize", opts);
     };
 
-    function _20(_21) {
-        var _22 = $.data(_21, "datagrid");
-        var _23 = _22.options;
-        var dc = _22.dc;
-        var _24 = _22.panel;
-        if (!_24.is(":visible")) {
+    function setBodySize(target) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var dc = state.dc;
+        var wrap = state.panel;
+        if (!wrap.is(":visible")) {
             return;
         }
-        var _25 = _24.width();
-        var _26 = _24.height();
-        var _27 = dc.view;
-        var _28 = dc.view1;
-        var _29 = dc.view2;
-        var _2a = _28.children("div.datagrid-header");
-        var _2b = _29.children("div.datagrid-header");
-        var _2c = _2a.find("table");
-        var _2d = _2b.find("table");
-        _27.width(_25);
-        var _2e = _2a.children("div.datagrid-header-inner").show();
-        _28.width(_2e.find("table").width());
-        if (!_23.showHeader) {
-            _2e.hide();
+        var innerWidth = wrap.width();
+        var innerHeight = wrap.height();
+        var view = dc.view;
+        var view1 = dc.view1;
+        var view2 = dc.view2;
+        var header1 = view1.children("div.datagrid-header");
+        var header2 = view2.children("div.datagrid-header");
+        var table1 = header1.find("table");
+        var table2 = header2.find("table");
+        view.width(innerWidth);
+        var headerInner = header1.children("div.datagrid-header-inner").show();
+        view1.width(headerInner.find("table").width());
+        if (!opts.showHeader) {
+            headerInner.hide();
         }
-        _29.width(_25 - _28._outerWidth());
-        _28.children()._outerWidth(_28.width());
-        _29.children()._outerWidth(_29.width());
-        var all = _2a.add(_2b).add(_2c).add(_2d);
+        view2.width(innerWidth - view1._outerWidth());
+        view1.children()._outerWidth(view1.width());
+        view2.children()._outerWidth(view2.width());
+        var all = header1.add(header2).add(table1).add(table2);
         all.css("height", "");
-        var hh = Math.max(_2c.height(), _2d.height());
+        var hh = Math.max(table1.height(), table2.height());
         all._outerHeight(hh);
-        _27.children(".datagrid-empty").css("top", hh + "px");
+        view.children(".datagrid-empty").css("top", hh + "px");
         dc.body1.add(dc.body2).children("table.datagrid-btable-frozen").css({
             position: "absolute",
             top: dc.header2._outerHeight()
         });
-        var _2f = dc.body2.children("table.datagrid-btable-frozen")._outerHeight();
-        var _30 = _2f + _2b._outerHeight() + _29.children(".datagrid-footer")._outerHeight();
-        _24.children(":not(.datagrid-view,.datagrid-mask,.datagrid-mask-msg)").each(function () {
-            _30 += $(this)._outerHeight();
+        var frozenHeight = dc.body2.children("table.datagrid-btable-frozen")._outerHeight();
+        var fixedHeight = frozenHeight + header2._outerHeight() + view2.children(".datagrid-footer")._outerHeight();
+        wrap.children(":not(.datagrid-view,.datagrid-mask,.datagrid-mask-msg)").each(function () {
+            fixedHeight += $(this)._outerHeight();
         });
-        var _31 = _24.outerHeight() - _24.height();
-        var _32 = _24._size("minHeight") || "";
-        var _33 = _24._size("maxHeight") || "";
-        _28.add(_29).children("div.datagrid-body").css({
-            marginTop: _2f,
-            height: (isNaN(parseInt(_23.height)) ? "" : (_26 - _30)),
-            minHeight: (_32 ? _32 - _31 - _30 : ""),
-            maxHeight: (_33 ? _33 - _31 - _30 : "")
+        var distance = wrap.outerHeight() - wrap.height();
+        var minHeight = wrap._size("minHeight") || "";
+        var maxHeight = wrap._size("maxHeight") || "";
+        view1.add(view2).children("div.datagrid-body").css({
+            marginTop: frozenHeight,
+            height: (isNaN(parseInt(opts.height)) ? "" : (innerHeight - fixedHeight)),
+            minHeight: (minHeight ? minHeight - distance - fixedHeight : ""),
+            maxHeight: (maxHeight ? maxHeight - distance - fixedHeight : "")
         });
-        _27.height(_29.height());
+        view.height(view2.height());
     };
 
-    function _34(_35, _36, _37) {
-        var _38 = $.data(_35, "datagrid").data.rows;
-        var _39 = $.data(_35, "datagrid").options;
-        var dc = $.data(_35, "datagrid").dc;
+    function fixRowHeight(target, index, forceFix) {
+        var rows = $.data(target, "datagrid").data.rows;
+        var opts = $.data(target, "datagrid").options;
+        var dc = $.data(target, "datagrid").dc;
         var tmp = $("<tr class=\"datagrid-row\" style=\"position:absolute;left:-999999px\"></tr>").appendTo("body");
-        var _3a = tmp.outerHeight();
+        var removeArrayItema = tmp.outerHeight();
         tmp.remove();
-        if (!dc.body1.is(":empty") && (!_39.nowrap || _39.autoRowHeight || _37)) {
-            if (_36 != undefined) {
-                var tr1 = _39.finder.getTr(_35, _36, "body", 1);
-                var tr2 = _39.finder.getTr(_35, _36, "body", 2);
-                _3b(tr1, tr2);
+        if (!dc.body1.is(":empty") && (!opts.nowrap || opts.autoRowHeight || forceFix)) {
+            if (index != undefined) {
+                var tr1 = opts.finder.getTr(target, index, "body", 1);
+                var tr2 = opts.finder.getTr(target, index, "body", 2);
+                setHeight(tr1, tr2);
             } else {
-                var tr1 = _39.finder.getTr(_35, 0, "allbody", 1);
-                var tr2 = _39.finder.getTr(_35, 0, "allbody", 2);
-                _3b(tr1, tr2);
-                if (_39.showFooter) {
-                    var tr1 = _39.finder.getTr(_35, 0, "allfooter", 1);
-                    var tr2 = _39.finder.getTr(_35, 0, "allfooter", 2);
-                    _3b(tr1, tr2);
+                var tr1 = opts.finder.getTr(target, 0, "allbody", 1);
+                var tr2 = opts.finder.getTr(target, 0, "allbody", 2);
+                setHeight(tr1, tr2);
+                if (opts.showFooter) {
+                    var tr1 = opts.finder.getTr(target, 0, "allfooter", 1);
+                    var tr2 = opts.finder.getTr(target, 0, "allfooter", 2);
+                    setHeight(tr1, tr2);
                 }
             }
         }
-        _20(_35);
-        if (_39.height == "auto") {
-            var _3c = dc.body1.parent();
-            var _3d = dc.body2;
-            var _3e = _3f(_3d);
-            var _40 = _3e.height;
-            if (_3e.width > _3d.width()) {
-                _40 += 18;
+        setBodySize(target);
+        if (opts.height == "auto") {
+            var body1 = dc.body1.parent();
+            var body2 = dc.body2;
+            var csize = getContentSize(body2);
+            var height = csize.height;
+            if (csize.width > body2.width()) {
+                height += 18;
             }
-            _40 -= parseInt(_3d.css("marginTop")) || 0;
-            _3c.height(_40);
-            _3d.height(_40);
+            height -= parseInt(body2.css("marginTop")) || 0;
+            body1.height(height);
+            body2.height(height);
             dc.view.height(dc.view2.height());
         }
         dc.body2.triggerHandler("scroll");
 
-        function _3b(_41, _42) {
-            for (var i = 0; i < _42.length; i++) {
-                var tr1 = $(_41[i]);
-                var tr2 = $(_42[i]);
+        // set body row or footer row height
+        function setHeight(trs1, trs2) {
+            for (var i = 0; i < trs2.length; i++) {
+                var tr1 = $(trs1[i]);
+                var tr2 = $(trs2[i]);
                 tr1.css("height", "");
                 tr2.css("height", "");
-                var _43 = Math.max(tr1.outerHeight(), tr2.outerHeight());
-                if (_43 != _3a) {
-                    _43 = Math.max(_43, _3a) + 1;
-                    tr1.css("height", _43);
-                    tr2.css("height", _43);
+                var height = Math.max(tr1.outerHeight(), tr2.outerHeight());
+                if (height != removeArrayItema) {
+                    height = Math.max(height, removeArrayItema) + 1;
+                    tr1.css("height", height);
+                    tr2.css("height", height);
                 }
             }
         };
 
-        function _3f(cc) {
-            var _44 = 0;
-            var _45 = 0;
+        function getContentSize(cc) {
+            var width = 0;
+            var height = 0;
             $(cc).children().each(function () {
                 var c = $(this);
                 if (c.is(":visible")) {
-                    _45 += c._outerHeight();
-                    if (_44 < c._outerWidth()) {
-                        _44 = c._outerWidth();
+                    height += c._outerHeight();
+                    if (width < c._outerWidth()) {
+                        width = c._outerWidth();
                     }
                 }
             });
             return {
-                width: _44,
-                height: _45
+                width: width,
+                height: height
             };
         };
     };
 
-    function _46(_47, _48) {
-        var _49 = $.data(_47, "datagrid");
-        var _4a = _49.options;
-        var dc = _49.dc;
+    function freezeRow(target, index) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var dc = state.dc;
         if (!dc.body2.children("table.datagrid-btable-frozen").length) {
             dc.body1.add(dc.body2).prepend("<table class=\"datagrid-btable datagrid-btable-frozen\" cellspacing=\"0\" cellpadding=\"0\"></table>");
         }
-        _4b(true);
-        _4b(false);
-        _20(_47);
+        moveTr(true);
+        moveTr(false);
+        setBodySize(target);
 
-        function _4b(_4c) {
-            var _4d = _4c ? 1 : 2;
-            var tr = _4a.finder.getTr(_47, _48, "body", _4d);
-            (_4c ? dc.body1 : dc.body2).children("table.datagrid-btable-frozen").append(tr);
+        function moveTr(frozen) {
+            var serno = frozen ? 1 : 2;
+            var tr = opts.finder.getTr(target, index, "body", serno);
+            (frozen ? dc.body1 : dc.body2).children("table.datagrid-btable-frozen").append(tr);
         };
     };
 
-    function wrapGrid(_4f, _50) {
-        function _51() {
-            var _52 = [];
-            var _53 = [];
-            $(_4f).children("thead").each(function () {
+    /**
+	 * wrap and return the grid object, fields and columns
+	 */
+    function wrapGrid(target, rownumbers) {
+        function getColumns() {
+            var frozenColumns = [];
+            var columns = [];
+            $(target).children("thead").each(function () {
                 var opt = $.parser.parseOptions(this, [{
                     frozen: "boolean"
                 }]);
                 $(this).find("tr").each(function () {
-                    var _54 = [];
+                    var cols = [];
                     $(this).find("th").each(function () {
                         var th = $(this);
                         var col = $.extend({}, $.parser.parseOptions(this, ["id", "field", "align", "halign", "order", "width", {
@@ -302,169 +306,169 @@
                                 col.editor = s;
                             }
                         }
-                        _54.push(col);
+                        cols.push(col);
                     });
-                    opt.frozen ? _52.push(_54) : _53.push(_54);
+                    opt.frozen ? frozenColumns.push(cols) : columns.push(cols);
                 });
             });
-            return [_52, _53];
+            return [frozenColumns, columns];
         };
-        var _55 = $("<div class=\"datagrid-wrap\">" + "<div class=\"datagrid-view\">" + "<div class=\"datagrid-view1\">" + "<div class=\"datagrid-header\">" + "<div class=\"datagrid-header-inner\"></div>" + "</div>" + "<div class=\"datagrid-body\">" + "<div class=\"datagrid-body-inner\"></div>" + "</div>" + "<div class=\"datagrid-footer\">" + "<div class=\"datagrid-footer-inner\"></div>" + "</div>" + "</div>" + "<div class=\"datagrid-view2\">" + "<div class=\"datagrid-header\">" + "<div class=\"datagrid-header-inner\"></div>" + "</div>" + "<div class=\"datagrid-body\"></div>" + "<div class=\"datagrid-footer\">" + "<div class=\"datagrid-footer-inner\"></div>" + "</div>" + "</div>" + "</div>" + "</div>").insertAfter(_4f);
-        _55.panel({
+        var panel = $("<div class=\"datagrid-wrap\">" + "<div class=\"datagrid-view\">" + "<div class=\"datagrid-view1\">" + "<div class=\"datagrid-header\">" + "<div class=\"datagrid-header-inner\"></div>" + "</div>" + "<div class=\"datagrid-body\">" + "<div class=\"datagrid-body-inner\"></div>" + "</div>" + "<div class=\"datagrid-footer\">" + "<div class=\"datagrid-footer-inner\"></div>" + "</div>" + "</div>" + "<div class=\"datagrid-view2\">" + "<div class=\"datagrid-header\">" + "<div class=\"datagrid-header-inner\"></div>" + "</div>" + "<div class=\"datagrid-body\"></div>" + "<div class=\"datagrid-footer\">" + "<div class=\"datagrid-footer-inner\"></div>" + "</div>" + "</div>" + "</div>" + "</div>").insertAfter(target);
+        panel.panel({
             doSize: false,
             cls: "datagrid"
         });
-        $(_4f).addClass("datagrid-f").hide().appendTo(_55.children("div.datagrid-view"));
-        var cc = _51();
-        var _56 = _55.children("div.datagrid-view");
-        var _57 = _56.children("div.datagrid-view1");
-        var _58 = _56.children("div.datagrid-view2");
+        $(target).addClass("datagrid-f").hide().appendTo(panel.children("div.datagrid-view"));
+        var cc = getColumns();
+        var view = panel.children("div.datagrid-view");
+        var view1 = view.children("div.datagrid-view1");
+        var view2 = view.children("div.datagrid-view2");
         return {
-            panel: _55,
+            panel: panel,
             frozenColumns: cc[0],
             columns: cc[1],
             dc: {
-                view: _56,
-                view1: _57,
-                view2: _58,
-                header1: _57.children("div.datagrid-header").children("div.datagrid-header-inner"),
-                header2: _58.children("div.datagrid-header").children("div.datagrid-header-inner"),
-                body1: _57.children("div.datagrid-body").children("div.datagrid-body-inner"),
-                body2: _58.children("div.datagrid-body"),
-                footer1: _57.children("div.datagrid-footer").children("div.datagrid-footer-inner"),
-                footer2: _58.children("div.datagrid-footer").children("div.datagrid-footer-inner")
+                view: view,
+                view1: view1,
+                view2: view2,
+                header1: view1.children("div.datagrid-header").children("div.datagrid-header-inner"),
+                header2: view2.children("div.datagrid-header").children("div.datagrid-header-inner"),
+                body1: view1.children("div.datagrid-body").children("div.datagrid-body-inner"),
+                body2: view2.children("div.datagrid-body"),
+                footer1: view1.children("div.datagrid-footer").children("div.datagrid-footer-inner"),
+                footer2: view2.children("div.datagrid-footer").children("div.datagrid-footer-inner")
             }
         };
     };
 
-    function buildGrid(_5a) {
-        var _5b = $.data(_5a, "datagrid");
-        var _5c = _5b.options;
-        var dc = _5b.dc;
-        var _5d = _5b.panel;
-        _5b.ss = $(_5a).datagrid("createStyleSheet");
-        _5d.panel($.extend({}, _5c, {
+    function buildGrid(target) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var dc = state.dc;
+        var panel = state.panel;
+        state.ss = $(target).datagrid("createStyleSheet");
+        panel.panel($.extend({}, opts, {
             id: null,
             doSize: false,
             onResize: function (_5e, _5f) {
-                if ($.data(_5a, "datagrid")) {
-                    _20(_5a);
-                    $(_5a).datagrid("fitColumns");
-                    _5c.onResize.call(_5d, _5e, _5f);
+                if ($.data(target, "datagrid")) {
+                    setBodySize(target);
+                    $(target).datagrid("fitColumns");
+                    opts.onResize.call(panel, _5e, _5f);
                 }
             },
             onExpand: function () {
-                if ($.data(_5a, "datagrid")) {
-                    $(_5a).datagrid("fixRowHeight").datagrid("fitColumns");
-                    _5c.onExpand.call(_5d);
+                if ($.data(target, "datagrid")) {
+                    $(target).datagrid("fixRowHeight").datagrid("fitColumns");
+                    opts.onExpand.call(panel);
                 }
             }
         }));
-        var _60 = $(_5a).attr("id") || "";
+        var _60 = $(target).attr("id") || "";
         if (_60) {
             _60 += "_";
         }
-        _5b.rowIdPrefix = _60 + "datagrid-row-r" + (++_1);
-        _5b.cellClassPrefix = _60 + "datagrid-cell-c" + _1;
-        _61(dc.header1, _5c.frozenColumns, true);
-        _61(dc.header2, _5c.columns, false);
-        _62();
-        dc.header1.add(dc.header2).css("display", _5c.showHeader ? "block" : "none");
-        dc.footer1.add(dc.footer2).css("display", _5c.showFooter ? "block" : "none");
-        if (_5c.toolbar) {
-            if ($.isArray(_5c.toolbar)) {
-                $("div.datagrid-toolbar", _5d).remove();
-                var tb = $("<div class=\"datagrid-toolbar\"><table cellspacing=\"0\" cellpadding=\"0\"><tr></tr></table></div>").prependTo(_5d);
+        state.rowIdPrefix = _60 + "datagrid-row-r" + (++DATAGRID_SERNO);
+        state.cellClassPrefix = _60 + "datagrid-cell-c" + DATAGRID_SERNO;
+        createColumnHeader(dc.header1, opts.frozenColumns, true);
+        createColumnHeader(dc.header2, opts.columns, false);
+        createColumnStyle();
+        dc.header1.add(dc.header2).css("display", opts.showHeader ? "block" : "none");
+        dc.footer1.add(dc.footer2).css("display", opts.showFooter ? "block" : "none");
+        if (opts.toolbar) {
+            if ($.isArray(opts.toolbar)) {
+                $("div.datagrid-toolbar", panel).remove();
+                var tb = $("<div class=\"datagrid-toolbar\"><table cellspacing=\"0\" cellpadding=\"0\"><tr></tr></table></div>").prependTo(panel);
                 var tr = tb.find("tr");
-                for (var i = 0; i < _5c.toolbar.length; i++) {
-                    var btn = _5c.toolbar[i];
+                for (var i = 0; i < opts.toolbar.length; i++) {
+                    var btn = opts.toolbar[i];
                     if (btn == "-") {
                         $("<td><div class=\"datagrid-btn-separator\"></div></td>").appendTo(tr);
                     } else {
                         var td = $("<td></td>").appendTo(tr);
-                        var _63 = $("<a href=\"javascript:;\"></a>").appendTo(td);
-                        _63[0].onclick = eval(btn.handler || function () {});
-                        _63.linkbutton($.extend({}, btn, {
+                        var tool = $("<a href=\"javascript:;\"></a>").appendTo(td);
+                        tool[0].onclick = eval(btn.handler || function () {});
+                        tool.linkbutton($.extend({}, btn, {
                             plain: true
                         }));
                     }
                 }
             } else {
-                $(_5c.toolbar).addClass("datagrid-toolbar").prependTo(_5d);
-                $(_5c.toolbar).show();
+                $(opts.toolbar).addClass("datagrid-toolbar").prependTo(panel);
+                $(opts.toolbar).show();
             }
         } else {
-            $("div.datagrid-toolbar", _5d).remove();
+            $("div.datagrid-toolbar", panel).remove();
         }
-        $("div.datagrid-pager", _5d).remove();
-        if (_5c.pagination) {
-            var _64 = $("<div class=\"datagrid-pager\"></div>");
-            if (_5c.pagePosition == "bottom") {
-                _64.appendTo(_5d);
+        $("div.datagrid-pager", panel).remove();
+        if (opts.pagination) {
+            var pager = $("<div class=\"datagrid-pager\"></div>");
+            if (opts.pagePosition == "bottom") {
+                pager.appendTo(panel);
             } else {
-                if (_5c.pagePosition == "top") {
-                    _64.addClass("datagrid-pager-top").prependTo(_5d);
+                if (opts.pagePosition == "top") {
+                    pager.addClass("datagrid-pager-top").prependTo(panel);
                 } else {
-                    var _65 = $("<div class=\"datagrid-pager datagrid-pager-top\"></div>").prependTo(_5d);
-                    _64.appendTo(_5d);
-                    _64 = _64.add(_65);
+                    var _65 = $("<div class=\"datagrid-pager datagrid-pager-top\"></div>").prependTo(panel);
+                    pager.appendTo(panel);
+                    pager = pager.add(_65);
                 }
             }
-            _64.pagination({
+            pager.pagination({
                 total: 0,
-                pageNumber: _5c.pageNumber,
-                pageSize: _5c.pageSize,
-                pageList: _5c.pageList,
-                onSelectPage: function (_66, _67) {
-                    _5c.pageNumber = _66 || 1;
-                    _5c.pageSize = _67;
-                    _64.pagination("refresh", {
-                        pageNumber: _66,
-                        pageSize: _67
+                pageNumber: opts.pageNumber,
+                pageSize: opts.pageSize,
+                pageList: opts.pageList,
+                onSelectPage: function (pageNum, pageSize) {
+                    opts.pageNumber = pageNum || 1;
+                    opts.pageSize = pageSize;
+                    pager.pagination("refresh", {
+                        pageNumber: pageNum,
+                        pageSize: pageSize
                     });
-                    request(_5a);
+                    request(target);
                 }
             });
-            _5c.pageSize = _64.pagination("options").pageSize;
+            opts.pageSize = pager.pagination("options").pageSize;
         }
 
-        function _61(_68, _69, _6a) {
-            if (!_69) {
+        function createColumnHeader(container, columns, frozen) {
+            if (!columns) {
                 return;
             }
-            $(_68).show();
-            $(_68).empty();
+            $(container).show();
+            $(container).empty();
             var tmp = $("<div class=\"datagrid-cell\" style=\"position:absolute;left:-99999px\"></div>").appendTo("body");
             tmp._outerWidth(99);
-            var _6b = 100 - parseInt(tmp[0].style.width);
+            var deltaWidth = 100 - parseInt(tmp[0].style.width);
             tmp.remove();
-            var _6c = [];
-            var _6d = [];
-            var _6e = [];
-            if (_5c.sortName) {
-                _6c = _5c.sortName.split(",");
-                _6d = _5c.sortOrder.split(",");
+            var names = [];
+            var orders = [];
+            var hiddenFields = [];
+            if (opts.sortName) {
+                names = opts.sortName.split(",");
+                orders = opts.sortOrder.split(",");
             }
-            var t = $("<table class=\"datagrid-htable\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\"><tbody></tbody></table>").appendTo(_68);
-            for (var i = 0; i < _69.length; i++) {
+            var t = $("<table class=\"datagrid-htable\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\"><tbody></tbody></table>").appendTo(container);
+            for (var i = 0; i < columns.length; i++) {
                 var tr = $("<tr class=\"datagrid-header-row\"></tr>").appendTo($("tbody", t));
-                var _6f = _69[i];
-                for (var j = 0; j < _6f.length; j++) {
-                    var col = _6f[j];
-                    var _70 = "";
+                var cols = columns[i];
+                for (var j = 0; j < cols.length; j++) {
+                    var col = cols[j];
+                    var attr = "";
                     if (col.rowspan) {
-                        _70 += "rowspan=\"" + col.rowspan + "\" ";
+                        attr += "rowspan=\"" + col.rowspan + "\" ";
                     }
                     if (col.colspan) {
-                        _70 += "colspan=\"" + col.colspan + "\" ";
+                        attr += "colspan=\"" + col.colspan + "\" ";
                         if (!col.id) {
-                            col.id = ["datagrid-td-group" + _1, i, j].join("-");
+                            col.id = ["datagrid-td-group" + DATAGRID_SERNO, i, j].join("-");
                         }
                     }
                     if (col.id) {
-                        _70 += "id=\"" + col.id + "\"";
+                        attr += "id=\"" + col.id + "\"";
                     }
-                    var td = $("<td " + _70 + "></td>").appendTo(tr);
+                    var td = $("<td " + attr + "></td>").appendTo(tr);
                     if (col.checkbox) {
                         td.attr("field", col.field);
                         $("<div class=\"datagrid-header-check\"></div>").html("<input type=\"checkbox\"/>").appendTo(td);
@@ -473,152 +477,155 @@
                             td.attr("field", col.field);
                             td.append("<div class=\"datagrid-cell\"><span></span><span class=\"datagrid-sort-icon\"></span></div>");
                             td.find("span:first").html(col.title);
-                            var _71 = td.find("div.datagrid-cell");
-                            var pos = _2(_6c, col.field);
+                            var cell = td.find("div.datagrid-cell");
+                            var pos = indexOfArray(names, col.field);
                             if (pos >= 0) {
-                                _71.addClass("datagrid-sort-" + _6d[pos]);
+                                cell.addClass("datagrid-sort-" + orders[pos]);
                             }
                             if (col.sortable) {
-                                _71.addClass("datagrid-sort");
+                                cell.addClass("datagrid-sort");
                             }
                             if (col.resizable == false) {
-                                _71.attr("resizable", "false");
+                                cell.attr("resizable", "false");
                             }
                             if (col.width) {
-                                var _72 = $.parser.parseValue("width", col.width, dc.view, _5c.scrollbarSize + (_5c.rownumbers ? _5c.rownumberWidth : 0));
-                                col.deltaWidth = _6b;
-                                col.boxWidth = _72 - _6b;
+                                var value = $.parser.parseValue("width", col.width, dc.view, opts.scrollbarSize + (opts.rownumbers ? opts.rownumberWidth : 0));
+                                col.deltaWidth = deltaWidth;
+                                col.boxWidth = value - deltaWidth;
                             } else {
                                 col.auto = true;
                             }
-                            _71.css("text-align", (col.halign || col.align || ""));
-                            col.cellClass = _5b.cellClassPrefix + "-" + col.field.replace(/[\.|\s]/g, "-");
-                            _71.addClass(col.cellClass);
+                            cell.css("text-align", (col.halign || col.align || ""));
+                            col.cellClass = state.cellClassPrefix + "-" + col.field.replace(/[\.|\s]/g, "-");
+                            cell.addClass(col.cellClass);
                         } else {
                             $("<div class=\"datagrid-cell-group\"></div>").html(col.title).appendTo(td);
                         }
                     }
                     if (col.hidden) {
                         td.hide();
-                        _6e.push(col.field);
+                        hiddenFields.push(col.field);
                     }
                 }
             }
-            if (_6a && _5c.rownumbers) {
-                var td = $("<td rowspan=\"" + _5c.frozenColumns.length + "\"><div class=\"datagrid-header-rownumber\"></div></td>");
+            if (frozen && opts.rownumbers) {
+                var td = $("<td rowspan=\"" + opts.frozenColumns.length + "\"><div class=\"datagrid-header-rownumber\"></div></td>");
                 if ($("tr", t).length == 0) {
                     td.wrap("<tr class=\"datagrid-header-row\"></tr>").parent().appendTo($("tbody", t));
                 } else {
                     td.prependTo($("tr:first", t));
                 }
             }
-            for (var i = 0; i < _6e.length; i++) {
-                _c3(_5a, _6e[i], -1);
+            for (var i = 0; i < hiddenFields.length; i++) {
+                fixColumnSpan(target, hiddenFields[i], -1);
             }
         };
 
-        function _62() {
-            var _73 = [
-                [".datagrid-header-rownumber", (_5c.rownumberWidth - 1) + "px"],
-                [".datagrid-cell-rownumber", (_5c.rownumberWidth - 1) + "px"]
+        function createColumnStyle() {
+            var lines = [
+                [".datagrid-header-rownumber", (opts.rownumberWidth - 1) + "px"],
+                [".datagrid-cell-rownumber", (opts.rownumberWidth - 1) + "px"]
             ];
-            var _74 = getColumnFields(_5a, true).concat(getColumnFields(_5a));
-            for (var i = 0; i < _74.length; i++) {
-                var col = getColumnOption(_5a, _74[i]);
+            var fields = getColumnFields(target, true).concat(getColumnFields(target));
+            for (var i = 0; i < fields.length; i++) {
+                var col = getColumnOption(target, fields[i]);
                 if (col && !col.checkbox) {
-                    _73.push(["." + col.cellClass, col.boxWidth ? col.boxWidth + "px" : "auto"]);
+                    lines.push(["." + col.cellClass, col.boxWidth ? col.boxWidth + "px" : "auto"]);
                 }
             }
-            _5b.ss.add(_73);
-            _5b.ss.dirty(_5b.cellSelectorPrefix);
-            _5b.cellSelectorPrefix = "." + _5b.cellClassPrefix;
+            state.ss.add(lines);
+            state.ss.dirty(state.cellSelectorPrefix);// mark the old selector as dirty that will be removed
+            state.cellSelectorPrefix = "." + state.cellClassPrefix;
         };
     };
 
-    function bindEvents(_78) {
-        var _79 = $.data(_78, "datagrid");
-        var _7a = _79.panel;
-        var _7b = _79.options;
-        var dc = _79.dc;
-        var _7c = dc.header1.add(dc.header2);
-        _7c.unbind(".datagrid");
-        for (var _7d in _7b.headerEvents) {
-            _7c.bind(_7d + ".datagrid", _7b.headerEvents[_7d]);
+    /**
+	 * bind the datagrid events
+	 */
+    function bindEvents(target) {
+        var state = $.data(target, "datagrid");
+        var panel = state.panel;
+        var opts = state.options;
+        var dc = state.dc;
+        var header = dc.header1.add(dc.header2);
+        header.unbind(".datagrid");
+        for (var event in opts.headerEvents) {
+            header.bind(event + ".datagrid", opts.headerEvents[event]);
         }
-        var _7e = _7c.find("div.datagrid-cell");
-        var _7f = _7b.resizeHandle == "right" ? "e" : (_7b.resizeHandle == "left" ? "w" : "e,w");
-        _7e.each(function () {
+        var cells = header.find("div.datagrid-cell");
+        var resizeHandle = opts.resizeHandle == "right" ? "e" : (opts.resizeHandle == "left" ? "w" : "e,w");
+        cells.each(function () {
             $(this).resizable({
-                handles: _7f,
-                edge: _7b.resizeEdge,
+                handles: resizeHandle,
+                edge: opts.resizeEdge,
                 disabled: ($(this).attr("resizable") ? $(this).attr("resizable") == "false" : false),
                 minWidth: 25,
                 onStartResize: function (e) {
-                    _79.resizing = true;
-                    _7c.css("cursor", $("body").css("cursor"));
-                    if (!_79.proxy) {
-                        _79.proxy = $("<div class=\"datagrid-resize-proxy\"></div>").appendTo(dc.view);
+                    state.resizing = true;
+                    header.css("cursor", $("body").css("cursor"));
+                    if (!state.proxy) {
+                        state.proxy = $("<div class=\"datagrid-resize-proxy\"></div>").appendTo(dc.view);
                     }
                     if (e.data.dir == "e") {
                         e.data.deltaEdge = $(this)._outerWidth() - (e.pageX - $(this).offset().left);
                     } else {
                         e.data.deltaEdge = $(this).offset().left - e.pageX - 1;
                     }
-                    _79.proxy.css({
-                        left: e.pageX - $(_7a).offset().left - 1 + e.data.deltaEdge,
+                    state.proxy.css({
+                        left: e.pageX - $(panel).offset().left - 1 + e.data.deltaEdge,
                         display: "none"
                     });
                     setTimeout(function () {
-                        if (_79.proxy) {
-                            _79.proxy.show();
+                        if (state.proxy) {
+                            state.proxy.show();
                         }
                     }, 500);
                 },
                 onResize: function (e) {
-                    _79.proxy.css({
-                        left: e.pageX - $(_7a).offset().left - 1 + e.data.deltaEdge,
+                    state.proxy.css({
+                        left: e.pageX - $(panel).offset().left - 1 + e.data.deltaEdge,
                         display: "block"
                     });
                     return false;
                 },
                 onStopResize: function (e) {
-                    _7c.css("cursor", "");
+                    header.css("cursor", "");
                     $(this).css("height", "");
-                    var _80 = $(this).parent().attr("field");
-                    var col = getColumnOption(_78, _80);
+                    var field = $(this).parent().attr("field");
+                    var col = getColumnOption(target, field);
                     col.width = $(this)._outerWidth() + 1;
                     col.boxWidth = col.width - col.deltaWidth;
                     col.auto = undefined;
                     $(this).css("width", "");
-                    $(_78).datagrid("fixColumnSize", _80);
-                    _79.proxy.remove();
-                    _79.proxy = null;
+                    $(target).datagrid("fixColumnSize", field);
+                    state.proxy.remove();
+                    state.proxy = null;
                     if ($(this).parents("div:first.datagrid-header").parent().hasClass("datagrid-view1")) {
-                        _20(_78);
+                        setBodySize(target);
                     }
-                    $(_78).datagrid("fitColumns");
-                    _7b.onResizeColumn.call(_78, _80, col.width);
+                    $(target).datagrid("fitColumns");
+                    opts.onResizeColumn.call(target, field, col.width);
                     setTimeout(function () {
-                        _79.resizing = false;
+                        state.resizing = false;
                     }, 0);
                 }
             });
         });
         var bb = dc.body1.add(dc.body2);
         bb.unbind();
-        for (var _7d in _7b.rowEvents) {
-            bb.bind(_7d, _7b.rowEvents[_7d]);
+        for (var event in opts.rowEvents) {
+            bb.bind(event, opts.rowEvents[event]);
         }
         dc.body1.bind("mousewheel DOMMouseScroll MozMousePixelScroll", function (e) {
             e.preventDefault();
             var e1 = e.originalEvent || window.event;
-            var _81 = e1.wheelDelta || e1.detail * (-1);
+            var delta = e1.wheelDelta || e1.detail * (-1);
             if ("deltaY" in e1) {
-                _81 = e1.deltaY * -1;
+                delta = e1.deltaY * -1;
             }
             var dg = $(e.target).closest("div.datagrid-view").children(".datagrid-f");
             var dc = dg.data("datagrid").dc;
-            dc.body2.scrollTop(dc.body2.scrollTop() - _81);
+            dc.body2.scrollTop(dc.body2.scrollTop() - delta);
         });
         dc.body2.bind("scroll", function () {
             var b1 = dc.view1.children("div.datagrid-body");
@@ -639,12 +646,12 @@
         });
     };
 
-    function _84(_85) {
+    function headerOverEventHandler(isOver) {
         return function (e) {
             var td = $(e.target).closest("td[field]");
             if (td.length) {
-                var _86 = _87(td);
-                if (!$(_86).data("datagrid").resizing && _85) {
+                var target = getTableTarget(td);
+                if (!$(target).data("datagrid").resizing && isOver) {
                     td.addClass("datagrid-header-over");
                 } else {
                     td.removeClass("datagrid-header-over");
@@ -653,185 +660,185 @@
         };
     };
 
-    function _88(e) {
-        var _89 = _87(e.target);
-        var _8a = $(_89).datagrid("options");
+    function headerClickEventHandler(e) {
+        var target = getTableTarget(e.target);
+        var opts = $(target).datagrid("options");
         var ck = $(e.target).closest("input[type=checkbox]");
         if (ck.length) {
-            if (_8a.singleSelect && _8a.selectOnCheck) {
+            if (opts.singleSelect && opts.selectOnCheck) {
                 return false;
             }
             if (ck.is(":checked")) {
-                _8b(_89);
+                checkAll(target);
             } else {
-                _8c(_89);
+                uncheckAll(target);
             }
             e.stopPropagation();
         } else {
-            var _8d = $(e.target).closest(".datagrid-cell");
-            if (_8d.length) {
-                var p1 = _8d.offset().left + 5;
-                var p2 = _8d.offset().left + _8d._outerWidth() - 5;
+            var cell = $(e.target).closest(".datagrid-cell");
+            if (cell.length) {
+                var p1 = cell.offset().left + 5;
+                var p2 = cell.offset().left + cell._outerWidth() - 5;
                 if (e.pageX < p2 && e.pageX > p1) {
-                    _8e(_89, _8d.parent().attr("field"));
+                    sortGrid(target, cell.parent().attr("field"));
                 }
             }
         }
     };
 
-    function _8f(e) {
-        var _90 = _87(e.target);
-        var _91 = $(_90).datagrid("options");
-        var _92 = $(e.target).closest(".datagrid-cell");
-        if (_92.length) {
-            var p1 = _92.offset().left + 5;
-            var p2 = _92.offset().left + _92._outerWidth() - 5;
-            var _93 = _91.resizeHandle == "right" ? (e.pageX > p2) : (_91.resizeHandle == "left" ? (e.pageX < p1) : (e.pageX < p1 || e.pageX > p2));
-            if (_93) {
-                var _94 = _92.parent().attr("field");
-                var col = getColumnOption(_90, _94);
+    function headerDblclickEventHandler(e) {
+        var target = getTableTarget(e.target);
+        var opts = $(target).datagrid("options");
+        var cell = $(e.target).closest(".datagrid-cell");
+        if (cell.length) {
+            var p1 = cell.offset().left + 5;
+            var p2 = cell.offset().left + cell._outerWidth() - 5;
+            var cond = opts.resizeHandle == "right" ? (e.pageX > p2) : (opts.resizeHandle == "left" ? (e.pageX < p1) : (e.pageX < p1 || e.pageX > p2));
+            if (cond) {
+                var field = cell.parent().attr("field");
+                var col = getColumnOption(target, field);
                 if (col.resizable == false) {
                     return;
                 }
-                $(_90).datagrid("autoSizeColumn", _94);
+                $(target).datagrid("autoSizeColumn", field);
                 col.auto = false;
             }
         }
     };
 
-    function _95(e) {
-        var _96 = _87(e.target);
-        var _97 = $(_96).datagrid("options");
+    function headerMenuEventHandler(e) {
+        var target = getTableTarget(e.target);
+        var opts = $(target).datagrid("options");
         var td = $(e.target).closest("td[field]");
-        _97.onHeaderContextMenu.call(_96, e, td.attr("field"));
+        opts.onHeaderContextMenu.call(target, e, td.attr("field"));
     };
 
-    function _98(_99) {
+    function hoverEventHandler(isOver) {
         return function (e) {
-            var tr = _9a(e.target);
+            var tr = getClosestTr(e.target);
             if (!tr) {
                 return;
             }
-            var _9b = _87(tr);
-            if ($.data(_9b, "datagrid").resizing) {
+            var target = getTableTarget(tr);
+            if ($.data(target, "datagrid").resizing) {
                 return;
             }
-            var _9c = _9d(tr);
-            if (_99) {
-                _9e(_9b, _9c);
+            var index = getTrIndex(tr);
+            if (isOver) {
+                highlightRow(target, index);
             } else {
-                var _9f = $.data(_9b, "datagrid").options;
-                _9f.finder.getTr(_9b, _9c).removeClass("datagrid-row-over");
+                var opts = $.data(target, "datagrid").options;
+                opts.finder.getTr(target, index).removeClass("datagrid-row-over");
             }
         };
     };
 
-    function _a0(e) {
-        var tr = _9a(e.target);
+    function clickEventHandler(e) {
+        var tr = getClosestTr(e.target);
         if (!tr) {
             return;
         }
-        var _a1 = _87(tr);
-        var _a2 = $.data(_a1, "datagrid").options;
-        var _a3 = _9d(tr);
+        var target = getTableTarget(tr);
+        var opts = $.data(target, "datagrid").options;
+        var index = getTrIndex(tr);
         var tt = $(e.target);
         if (tt.parent().hasClass("datagrid-cell-check")) {
-            if (_a2.singleSelect && _a2.selectOnCheck) {
+            if (opts.singleSelect && opts.selectOnCheck) {
                 tt._propAttr("checked", !tt.is(":checked"));
-                _a4(_a1, _a3);
+                checkRow(target, index);
             } else {
                 if (tt.is(":checked")) {
                     tt._propAttr("checked", false);
-                    _a4(_a1, _a3);
+                    checkRow(target, index);
                 } else {
                     tt._propAttr("checked", true);
-                    _a5(_a1, _a3);
+                    uncheckRow(target, index);
                 }
             }
         } else {
-            var row = _a2.finder.getRow(_a1, _a3);
+            var row = opts.finder.getRow(target, index);
             var td = tt.closest("td[field]", tr);
             if (td.length) {
-                var _a6 = td.attr("field");
-                _a2.onClickCell.call(_a1, _a3, _a6, row[_a6]);
+                var field = td.attr("field");
+                opts.onClickCell.call(target, index, field, row[field]);
             }
-            if (_a2.singleSelect == true) {
-                _a7(_a1, _a3);
+            if (opts.singleSelect == true) {
+                selectRow(target, index);
             } else {
-                if (_a2.ctrlSelect) {
+                if (opts.ctrlSelect) {
                     if (e.metaKey || e.ctrlKey) {
                         if (tr.hasClass("datagrid-row-selected")) {
-                            _a8(_a1, _a3);
+                            unselectRow(target, index);
                         } else {
-                            _a7(_a1, _a3);
+                            selectRow(target, index);
                         }
                     } else {
                         if (e.shiftKey) {
-                            $(_a1).datagrid("clearSelections");
-                            var _a9 = Math.min(_a2.lastSelectedIndex || 0, _a3);
-                            var _aa = Math.max(_a2.lastSelectedIndex || 0, _a3);
-                            for (var i = _a9; i <= _aa; i++) {
-                                _a7(_a1, i);
+                            $(target).datagrid("clearSelections");
+                            var fromIndex = Math.min(opts.lastSelectedIndex || 0, index);
+                            var toIndex = Math.max(opts.lastSelectedIndex || 0, index);
+                            for (var i = fromIndex; i <= toIndex; i++) {
+                                selectRow(target, i);
                             }
                         } else {
-                            $(_a1).datagrid("clearSelections");
-                            _a7(_a1, _a3);
-                            _a2.lastSelectedIndex = _a3;
+                            $(target).datagrid("clearSelections");
+                            selectRow(target, index);
+                            opts.lastSelectedIndex = index;
                         }
                     }
                 } else {
                     if (tr.hasClass("datagrid-row-selected")) {
-                        _a8(_a1, _a3);
+                        unselectRow(target, index);
                     } else {
-                        _a7(_a1, _a3);
+                        selectRow(target, index);
                     }
                 }
             }
-            _a2.onClickRow.apply(_a1, _5(_a1, [_a3, row]));
+            opts.onClickRow.apply(target, getArguments(target, [index, row]));
         }
     };
 
-    function _ab(e) {
-        var tr = _9a(e.target);
+    function dblclickEventHandler(e) {
+        var tr = getClosestTr(e.target);
         if (!tr) {
             return;
         }
-        var _ac = _87(tr);
-        var _ad = $.data(_ac, "datagrid").options;
-        var _ae = _9d(tr);
-        var row = _ad.finder.getRow(_ac, _ae);
+        var target = getTableTarget(tr);
+        var opts = $.data(target, "datagrid").options;
+        var index = getTrIndex(tr);
+        var row = opts.finder.getRow(target, index);
         var td = $(e.target).closest("td[field]", tr);
         if (td.length) {
-            var _af = td.attr("field");
-            _ad.onDblClickCell.call(_ac, _ae, _af, row[_af]);
+            var field = td.attr("field");
+            opts.onDblClickCell.call(target, index, field, row[field]);
         }
-        _ad.onDblClickRow.apply(_ac, _5(_ac, [_ae, row]));
+        opts.onDblClickRow.apply(target, getArguments(target, [index, row]));
     };
 
-    function _b0(e) {
-        var tr = _9a(e.target);
+    function contextmenuEventHandler(e) {
+        var tr = getClosestTr(e.target);
         if (tr) {
-            var _b1 = _87(tr);
-            var _b2 = $.data(_b1, "datagrid").options;
-            var _b3 = _9d(tr);
-            var row = _b2.finder.getRow(_b1, _b3);
-            _b2.onRowContextMenu.call(_b1, e, _b3, row);
+            var target = getTableTarget(tr);
+            var opts = $.data(target, "datagrid").options;
+            var index = getTrIndex(tr);
+            var row = opts.finder.getRow(target, index);
+            opts.onRowContextMenu.call(target, e, index, row);
         } else {
-            var _b4 = _9a(e.target, ".datagrid-body");
-            if (_b4) {
-                var _b1 = _87(_b4);
-                var _b2 = $.data(_b1, "datagrid").options;
-                _b2.onRowContextMenu.call(_b1, e, -1, null);
+            var body = getClosestTr(e.target, ".datagrid-body");
+            if (body) {
+                var target = getTableTarget(body);
+                var opts = $.data(target, "datagrid").options;
+                opts.onRowContextMenu.call(target, e, -1, null);
             }
         }
     };
 
-    function _87(t) {
+    function getTableTarget(t) {
         return $(t).closest("div.datagrid-view").children(".datagrid-f")[0];
     };
 
-    function _9a(t, _b5) {
-        var tr = $(t).closest(_b5 || "tr.datagrid-row");
+    function getClosestTr(t, selector) {
+        var tr = $(t).closest(selector || "tr.datagrid-row");
         if (tr.length && tr.parent().length) {
             return tr;
         } else {
@@ -839,7 +846,7 @@
         }
     };
 
-    function _9d(tr) {
+    function getTrIndex(tr) {
         if (tr.attr("datagrid-row-index")) {
             return parseInt(tr.attr("datagrid-row-index"));
         } else {
@@ -847,85 +854,88 @@
         }
     };
 
-    function _8e(_b6, _b7) {
-        var _b8 = $.data(_b6, "datagrid");
-        var _b9 = _b8.options;
-        _b7 = _b7 || {};
-        var _ba = {
-            sortName: _b9.sortName,
-            sortOrder: _b9.sortOrder
+    function sortGrid(target, param) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        param = param || {};
+        var sparam = {
+            sortName: opts.sortName,
+            sortOrder: opts.sortOrder
         };
-        if (typeof _b7 == "object") {
-            $.extend(_ba, _b7);
+        if (typeof param == "object") {
+            $.extend(sparam, param);
         }
-        var _bb = [];
-        var _bc = [];
-        if (_ba.sortName) {
-            _bb = _ba.sortName.split(",");
-            _bc = _ba.sortOrder.split(",");
+        var names = [];
+        var orders = [];
+        if (sparam.sortName) {
+            names = sparam.sortName.split(",");
+            orders = sparam.sortOrder.split(",");
         }
-        if (typeof _b7 == "string") {
-            var _bd = _b7;
-            var col = getColumnOption(_b6, _bd);
-            if (!col.sortable || _b8.resizing) {
+        if (typeof param == "string") {
+            var field = param;
+            var col = getColumnOption(target, field);
+            if (!col.sortable || state.resizing) {
                 return;
             }
-            var _be = col.order || "asc";
-            var pos = _2(_bb, _bd);
+            var originalOrder = col.order || "asc";
+            var pos = indexOfArray(names, field);
             if (pos >= 0) {
-                var _bf = _bc[pos] == "asc" ? "desc" : "asc";
-                if (_b9.multiSort && _bf == _be) {
-                    _bb.splice(pos, 1);
-                    _bc.splice(pos, 1);
+                var nextOrder = orders[pos] == "asc" ? "desc" : "asc";
+                if (opts.multiSort && nextOrder == originalOrder) {
+                    names.splice(pos, 1);
+                    orders.splice(pos, 1);
                 } else {
-                    _bc[pos] = _bf;
+                    orders[pos] = nextOrder;
                 }
             } else {
-                if (_b9.multiSort) {
-                    _bb.push(_bd);
-                    _bc.push(_be);
+                if (opts.multiSort) {
+                    names.push(field);
+                    orders.push(originalOrder);
                 } else {
-                    _bb = [_bd];
-                    _bc = [_be];
+                    names = [field];
+                    orders = [originalOrder];
                 }
             }
-            _ba.sortName = _bb.join(",");
-            _ba.sortOrder = _bc.join(",");
+            sparam.sortName = names.join(",");
+            sparam.sortOrder = orders.join(",");
         }
-        if (_b9.onBeforeSortColumn.call(_b6, _ba.sortName, _ba.sortOrder) == false) {
+        if (opts.onBeforeSortColumn.call(target, sparam.sortName, sparam.sortOrder) == false) {
             return;
         }
-        $.extend(_b9, _ba);
-        var dc = _b8.dc;
-        var _c0 = dc.header1.add(dc.header2);
-        _c0.find("div.datagrid-cell").removeClass("datagrid-sort-asc datagrid-sort-desc");
-        for (var i = 0; i < _bb.length; i++) {
-            var col = getColumnOption(_b6, _bb[i]);
-            _c0.find("div." + col.cellClass).addClass("datagrid-sort-" + _bc[i]);
+        $.extend(opts, sparam);
+        var dc = state.dc;
+        var header = dc.header1.add(dc.header2);
+        header.find("div.datagrid-cell").removeClass("datagrid-sort-asc datagrid-sort-desc");
+        for (var i = 0; i < names.length; i++) {
+            var col = getColumnOption(target, names[i]);
+            header.find("div." + col.cellClass).addClass("datagrid-sort-" + orders[i]);
         }
-        if (_b9.remoteSort) {
-            request(_b6);
+        if (opts.remoteSort) {
+            request(target);
         } else {
-            _c2(_b6, $(_b6).datagrid("getData"));
+            loadData(target, $(target).datagrid("getData"));
         }
-        _b9.onSortColumn.call(_b6, _b9.sortName, _b9.sortOrder);
+        opts.onSortColumn.call(target, opts.sortName, opts.sortOrder);
     };
 
-    function _c3(_c4, _c5, _c6) {
-        _c7(true);
-        _c7(false);
+    /**
+	 * fix the colspan value of header group cells
+	 */
+    function fixColumnSpan(target, field, delta) {
+        fixSpan(true);
+        fixSpan(false);
 
-        function _c7(_c8) {
-            var aa = _c9(_c4, _c8);
+        function fixSpan(frozen) {
+            var aa = getColumnLayout(target, frozen);
             if (aa.length) {
-                var _ca = aa[aa.length - 1];
-                var _cb = _2(_ca, _c5);
-                if (_cb >= 0) {
-                    for (var _cc = 0; _cc < aa.length - 1; _cc++) {
-                        var td = $("#" + aa[_cc][_cb]);
-                        var _cd = parseInt(td.attr("colspan") || 1) + (_c6 || 0);
-                        td.attr("colspan", _cd);
-                        if (_cd) {
+                var fields = aa[aa.length - 1];
+                var colIndex = indexOfArray(fields, field);
+                if (colIndex >= 0) {
+                    for (var rowIndex = 0; rowIndex < aa.length - 1; rowIndex++) {
+                        var td = $("#" + aa[rowIndex][colIndex]);
+                        var colspan = parseInt(td.attr("colspan") || 1) + (delta || 0);
+                        td.attr("colspan", colspan);
+                        if (colspan) {
                             td.show();
                         } else {
                             td.hide();
@@ -936,39 +946,42 @@
         };
     };
 
-    function _ce(_cf) {
-        var _d0 = $.data(_cf, "datagrid");
-        var _d1 = _d0.options;
-        var dc = _d0.dc;
-        var _d2 = dc.view2.children("div.datagrid-header");
-        var _d3 = _d2.children("div.datagrid-header-inner");
+    /**
+	 * expand the columns to fit the grid width
+	 */
+    function fitColumns(target) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var dc = state.dc;
+        var header = dc.view2.children("div.datagrid-header");
+        var headerInner = header.children("div.datagrid-header-inner");
         dc.body2.css("overflow-x", "");
-        _d4();
-        _d5();
-        _d6();
-        _d4(true);
-        _d3.show();
-        if (_d2.width() >= _d2.find("table").width()) {
+        setGroupWidth();
+        setPercentWidth();
+        fillWidth();
+        setGroupWidth(true);
+        headerInner.show();
+        if (header.width() >= header.find("table").width()) {
             dc.body2.css("overflow-x", "hidden");
         }
-        if (!_d1.showHeader) {
-            _d3.hide();
+        if (!opts.showHeader) {
+            headerInner.hide();
         }
 
-        function _d6() {
-            if (!_d1.fitColumns) {
+        function fillWidth() {
+            if (!opts.fitColumns) {
                 return;
             }
-            if (!_d0.leftWidth) {
-                _d0.leftWidth = 0;
+            if (!state.leftWidth) {
+                state.leftWidth = 0;
             }
-            var _d7 = 0;
+            var fieldWidths = 0;
             var cc = [];
-            var _d8 = getColumnFields(_cf, false);
-            for (var i = 0; i < _d8.length; i++) {
-                var col = getColumnOption(_cf, _d8[i]);
-                if (_d9(col)) {
-                    _d7 += col.width;
+            var fields = getColumnFields(target, false);
+            for (var i = 0; i < fields.length; i++) {
+                var col = getColumnOption(target, fields[i]);
+                if (canResize(col)) {
+                    fieldWidths += col.width;
                     cc.push({
                         field: col.field,
                         col: col,
@@ -976,23 +989,23 @@
                     });
                 }
             }
-            if (!_d7) {
+            if (!fieldWidths) {
                 return;
             }
-            cc[cc.length - 1].addingWidth -= _d0.leftWidth;
-            _d3.show();
-            var _da = _d2.width() - _d2.find("table").width() - _d1.scrollbarSize + _d0.leftWidth;
-            var _db = _da / _d7;
-            if (!_d1.showHeader) {
-                _d3.hide();
+            cc[cc.length - 1].addingWidth -= state.leftWidth;
+            headerInner.show();
+            var leftWidth = header.width() - header.find("table").width() - opts.scrollbarSize + state.leftWidth;
+            var rate = leftWidth / fieldWidths;
+            if (!opts.showHeader) {
+                headerInner.hide();
             }
             for (var i = 0; i < cc.length; i++) {
                 var c = cc[i];
-                var _dc = parseInt(c.col.width * _db);
-                c.addingWidth += _dc;
-                _da -= _dc;
+                var width = parseInt(c.col.width * rate);
+                c.addingWidth += width;
+                leftWidth -= width;
             }
-            cc[cc.length - 1].addingWidth += _da;
+            cc[cc.length - 1].addingWidth += leftWidth;
             for (var i = 0; i < cc.length; i++) {
                 var c = cc[i];
                 if (c.col.boxWidth + c.addingWidth > 0) {
@@ -1000,41 +1013,41 @@
                     c.col.width += c.addingWidth;
                 }
             }
-            _d0.leftWidth = _da;
-            $(_cf).datagrid("fixColumnSize");
+            state.leftWidth = leftWidth;
+            $(target).datagrid("fixColumnSize");
         };
 
-        function _d5() {
-            var _dd = false;
-            var _de = getColumnFields(_cf, true).concat(getColumnFields(_cf, false));
-            $.map(_de, function (_df) {
-                var col = getColumnOption(_cf, _df);
+        function setPercentWidth() {
+            var changed = false;
+            var fields = getColumnFields(target, true).concat(getColumnFields(target, false));
+            $.map(fields, function (_df) {
+                var col = getColumnOption(target, _df);
                 if (String(col.width || "").indexOf("%") >= 0) {
-                    var _e0 = $.parser.parseValue("width", col.width, dc.view, _d1.scrollbarSize + (_d1.rownumbers ? _d1.rownumberWidth : 0)) - col.deltaWidth;
-                    if (_e0 > 0) {
-                        col.boxWidth = _e0;
-                        _dd = true;
+                    var width = $.parser.parseValue("width", col.width, dc.view, opts.scrollbarSize + (opts.rownumbers ? opts.rownumberWidth : 0)) - col.deltaWidth;
+                    if (width > 0) {
+                        col.boxWidth = width;
+                        changed = true;
                     }
                 }
             });
-            if (_dd) {
-                $(_cf).datagrid("fixColumnSize");
+            if (changed) {
+                $(target).datagrid("fixColumnSize");
             }
         };
 
-        function _d4(fit) {
-            var _e1 = dc.header1.add(dc.header2).find(".datagrid-cell-group");
-            if (_e1.length) {
-                _e1.each(function () {
+        function setGroupWidth(fit) {
+            var groups = dc.header1.add(dc.header2).find(".datagrid-cell-group");
+            if (groups.length) {
+                groups.each(function () {
                     $(this)._outerWidth(fit ? $(this).parent().width() : 10);
                 });
                 if (fit) {
-                    _20(_cf);
+                    setBodySize(target);
                 }
             }
         };
 
-        function _d9(col) {
+        function canResize(col) {
             if (String(col.width || "").indexOf("%") >= 0) {
                 return false;
             }
@@ -1044,137 +1057,143 @@
         };
     };
 
-    function _e2(_e3, _e4) {
-        var _e5 = $.data(_e3, "datagrid");
-        var _e6 = _e5.options;
-        var dc = _e5.dc;
+    /**
+	 * adjusts the column width to fit the contents.
+	 */
+    function autoSizeColumn(target, field) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var dc = state.dc;
         var tmp = $("<div class=\"datagrid-cell\" style=\"position:absolute;left:-9999px\"></div>").appendTo("body");
-        if (_e4) {
-            setSize(_e4);
-            $(_e3).datagrid("fitColumns");
+        if (field) {
+            setSize(field);
+            $(target).datagrid("fitColumns");
         } else {
-            var _e7 = false;
-            var _e8 = getColumnFields(_e3, true).concat(getColumnFields(_e3, false));
-            for (var i = 0; i < _e8.length; i++) {
-                var _e4 = _e8[i];
-                var col = getColumnOption(_e3, _e4);
+            var canFitColumns = false;
+            var fields = getColumnFields(target, true).concat(getColumnFields(target, false));
+            for (var i = 0; i < fields.length; i++) {
+                var field = fields[i];
+                var col = getColumnOption(target, field);
                 if (col.auto) {
-                    setSize(_e4);
-                    _e7 = true;
+                    setSize(field);
+                    canFitColumns = true;
                 }
             }
-            if (_e7) {
-                $(_e3).datagrid("fitColumns");
+            if (canFitColumns) {
+                $(target).datagrid("fitColumns");
             }
         }
         tmp.remove();
 
-        function setSize(_e9) {
-            var _ea = dc.view.find("div.datagrid-header td[field=\"" + _e9 + "\"] div.datagrid-cell");
-            _ea.css("width", "");
-            var col = $(_e3).datagrid("getColumnOption", _e9);
+        function setSize(field) {
+            var headerCell = dc.view.find("div.datagrid-header td[field=\"" + field + "\"] div.datagrid-cell");
+            headerCell.css("width", "");
+            var col = $(target).datagrid("getColumnOption", field);
             col.width = undefined;
             col.boxWidth = undefined;
             col.auto = true;
-            $(_e3).datagrid("fixColumnSize", _e9);
-            var _eb = Math.max(_ec("header"), _ec("allbody"), _ec("allfooter")) + 1;
-            _ea._outerWidth(_eb - 1);
-            col.width = _eb;
-            col.boxWidth = parseInt(_ea[0].style.width);
-            col.deltaWidth = _eb - col.boxWidth;
-            _ea.css("width", "");
-            $(_e3).datagrid("fixColumnSize", _e9);
-            _e6.onResizeColumn.call(_e3, _e9, col.width);
+            $(target).datagrid("fixColumnSize", field);
+            var width = Math.max(getWidth("header"), getWidth("allbody"), getWidth("allfooter")) + 1;
+            headerCell._outerWidth(width - 1);
+            col.width = width;
+            col.boxWidth = parseInt(headerCell[0].style.width);
+            col.deltaWidth = width - col.boxWidth;
+            headerCell.css("width", "");
+            $(target).datagrid("fixColumnSize", field);
+            opts.onResizeColumn.call(target, field, col.width);
 
-            function _ec(_ed) {
-                var _ee = 0;
-                if (_ed == "header") {
-                    _ee = _ef(_ea);
+            function getWidth(type) {
+                var width = 0;
+                if (type == "header") {
+                    width = getCellWidth(headerCell);
                 } else {
-                    _e6.finder.getTr(_e3, 0, _ed).find("td[field=\"" + _e9 + "\"] div.datagrid-cell").each(function () {
-                        var w = _ef($(this));
-                        if (_ee < w) {
-                            _ee = w;
+                    opts.finder.getTr(target, 0, type).find("td[field=\"" + field + "\"] div.datagrid-cell").each(function () {
+                        var w = getCellWidth($(this));
+                        if (width < w) {
+                            width = w;
                         }
                     });
                 }
-                return _ee;
+                return width;
 
-                function _ef(_f0) {
-                    return _f0.is(":visible") ? _f0._outerWidth() : tmp.html(_f0.html())._outerWidth();
+                function getCellWidth(cell) {
+                    return cell.is(":visible") ? cell._outerWidth() : tmp.html(cell.html())._outerWidth();
                 };
             };
         };
     };
 
-    function _f1(_f2, _f3) {
-        var _f4 = $.data(_f2, "datagrid");
-        var _f5 = _f4.options;
-        var dc = _f4.dc;
-        var _f6 = dc.view.find("table.datagrid-btable,table.datagrid-ftable");
-        _f6.css("table-layout", "fixed");
-        if (_f3) {
-            fix(_f3);
+    /**
+	 * fix column size for the specified field
+	 */
+    function fixColumnSize(target, field) {
+        var state = $.data(target, "datagrid");
+        // var opts = state.options;
+        var dc = state.dc;
+        var table = dc.view.find("table.datagrid-btable,table.datagrid-ftable");
+        table.css("table-layout", "fixed");
+        if (field) {
+            fix(field);
         } else {
-            var ff = getColumnFields(_f2, true).concat(getColumnFields(_f2, false));
+            var ff = getColumnFields(target, true).concat(getColumnFields(target, false));
             for (var i = 0; i < ff.length; i++) {
                 fix(ff[i]);
             }
         }
-        _f6.css("table-layout", "");
-        _f7(_f2);
-        _34(_f2);
-        _f8(_f2);
+        table.css("table-layout", "");
+        fixMergedSize(target);
+        fixRowHeight(target);
+        fixEditableSize(target);
 
-        function fix(_f9) {
-            var col = getColumnOption(_f2, _f9);
+        function fix(field) {
+            var col = getColumnOption(target, field);
             if (col.cellClass) {
-                _f4.ss.set("." + col.cellClass, col.boxWidth ? col.boxWidth + "px" : "auto");
+                state.ss.set("." + col.cellClass, col.boxWidth ? col.boxWidth + "px" : "auto");
             }
         };
     };
 
-    function _f7(_fa, tds) {
-        var dc = $.data(_fa, "datagrid").dc;
+    function fixMergedSize(target, tds) {
+        var dc = $.data(target, "datagrid").dc;
         tds = tds || dc.view.find("td.datagrid-td-merged");
         tds.each(function () {
             var td = $(this);
-            var _fb = td.attr("colspan") || 1;
-            if (_fb > 1) {
-                var col = getColumnOption(_fa, td.attr("field"));
-                var _fc = col.boxWidth + col.deltaWidth - 1;
-                for (var i = 1; i < _fb; i++) {
+            var colspan = td.attr("colspan") || 1;
+            if (colspan > 1) {
+                var col = getColumnOption(target, td.attr("field"));
+                var width = col.boxWidth + col.deltaWidth - 1;
+                for (var i = 1; i < colspan; i++) {
                     td = td.next();
-                    col = getColumnOption(_fa, td.attr("field"));
-                    _fc += col.boxWidth + col.deltaWidth;
+                    col = getColumnOption(target, td.attr("field"));
+                    width += col.boxWidth + col.deltaWidth;
                 }
-                $(this).children("div.datagrid-cell")._outerWidth(_fc);
+                $(this).children("div.datagrid-cell")._outerWidth(width);
             }
         });
     };
 
-    function _f8(_fd) {
-        var dc = $.data(_fd, "datagrid").dc;
+    function fixEditableSize(target) {
+        var dc = $.data(target, "datagrid").dc;
         dc.view.find("div.datagrid-editable").each(function () {
-            var _fe = $(this);
-            var _ff = _fe.parent().attr("field");
-            var col = $(_fd).datagrid("getColumnOption", _ff);
-            _fe._outerWidth(col.boxWidth + col.deltaWidth - 1);
+            var cell = $(this);
+            var field = cell.parent().attr("field");
+            var col = $(target).datagrid("getColumnOption", field);
+            cell._outerWidth(col.boxWidth + col.deltaWidth - 1);
             var ed = $.data(this, "datagrid.editor");
             if (ed.actions.resize) {
-                ed.actions.resize(ed.target, _fe.width());
+                ed.actions.resize(ed.target, cell.width());
             }
         });
     };
 
-    function getColumnOption(_100, _101) {
-        function find(_102) {
-            if (_102) {
-                for (var i = 0; i < _102.length; i++) {
-                    var cc = _102[i];
+    function getColumnOption(target, field) {
+        function find(columns) {
+            if (columns) {
+                for (var i = 0; i < columns.length; i++) {
+                    var cc = columns[i];
                     for (var j = 0; j < cc.length; j++) {
                         var c = cc[j];
-                        if (c.field == _101) {
+                        if (c.field == field) {
                             return c;
                         }
                     }
@@ -1182,7 +1201,7 @@
             }
             return null;
         };
-        var opts = $.data(_100, "datagrid").options;
+        var opts = $.data(target, "datagrid").options;
         var col = find(opts.columns);
         if (!col) {
             col = find(opts.frozenColumns);
@@ -1190,39 +1209,39 @@
         return col;
     };
 
-    function _c9(_103, _104) {
-        var opts = $.data(_103, "datagrid").options;
-        var _105 = _104 ? opts.frozenColumns : opts.columns;
+    function getColumnLayout(target, frozen) {
+        var opts = $.data(target, "datagrid").options;
+        var columns = frozen ? opts.frozenColumns : opts.columns;
         var aa = [];
-        var _106 = _107();
-        for (var i = 0; i < _105.length; i++) {
-            aa[i] = new Array(_106);
-        }
-        for (var _108 = 0; _108 < _105.length; _108++) {
-            $.map(_105[_108], function (col) {
-                var _109 = _10a(aa[_108]);
-                if (_109 >= 0) {
-                    var _10b = col.field || col.id || "";
+        var count = getCount(); // the fields count 取数组第一个元素的colspan相加得到
+        for (var i = 0; i < columns.length; i++) {
+            aa[i] = new Array(count);
+        } //取两个数组
+        for (var rowIndex = 0; rowIndex < columns.length; rowIndex++) {
+            $.map(columns[rowIndex], function (col) {
+                var colIndex = getIndex(aa[rowIndex]);
+                if (colIndex >= 0) {
+                    var value = col.field || col.id || "";
                     for (var c = 0; c < (col.colspan || 1); c++) {
                         for (var r = 0; r < (col.rowspan || 1); r++) {
-                            aa[_108 + r][_109] = _10b;
+                            aa[rowIndex + r][colIndex] = value;
                         }
-                        _109++;
+                        colIndex++;
                     }
                 }
             });
         }
         return aa;
 
-        function _107() {
-            var _10c = 0;
-            $.map(_105[0] || [], function (col) {
-                _10c += col.colspan || 1;
+        function getCount() {
+            var count = 0;
+            $.map(columns[0] || [], function (col) {
+                count += col.colspan || 1;
             });
-            return _10c;
+            return count;
         };
 
-        function _10a(a) {
+        function getIndex(a) {
             for (var i = 0; i < a.length; i++) {
                 if (a[i] == undefined) {
                     return i;
@@ -1232,16 +1251,22 @@
         };
     };
 
-    function getColumnFields(_10d, _10e) {
-        var aa = _c9(_10d, _10e);
+    /**
+	 * get column fields which will be show in row
+	 */
+    function getColumnFields(target, frozen) {
+        var aa = getColumnLayout(target, frozen);
         return aa.length ? aa[aa.length - 1] : aa;
     };
 
-    function _c2(_10f, data) {
-        var _110 = $.data(_10f, "datagrid");
-        var opts = _110.options;
-        var dc = _110.dc;
-        data = opts.loadFilter.call(_10f, data);
+    /**
+	 * load data to the grid
+	 */
+    function loadData(target, data) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var dc = state.dc;
+        data = opts.loadFilter.call(target, data);
         if ($.isArray(data)) {
             data = {
                 total: data.length,
@@ -1249,23 +1274,23 @@
             };
         }
         data.total = parseInt(data.total);
-        _110.data = data;
+        state.data = data;
         if (data.footer) {
-            _110.footer = data.footer;
+            state.footer = data.footer;
         }
         if (!opts.remoteSort && opts.sortName) {
-            var _111 = opts.sortName.split(",");
-            var _112 = opts.sortOrder.split(",");
+            var names = opts.sortName.split(",");
+            var orders = opts.sortOrder.split(",");
             data.rows.sort(function (r1, r2) {
                 var r = 0;
-                for (var i = 0; i < _111.length; i++) {
-                    var sn = _111[i];
-                    var so = _112[i];
-                    var col = getColumnOption(_10f, sn);
-                    var _113 = col.sorter || function (a, b) {
+                for (var i = 0; i < names.length; i++) {
+                    var sn = names[i];
+                    var so = orders[i];
+                    var col = getColumnOption(target, sn);
+                    var sortFunc = col.sorter || function (a, b) {
                         return a == b ? 0 : (a > b ? 1 : -1);
                     };
-                    r = _113(r1[sn], r2[sn]) * (so == "asc" ? 1 : -1);
+                    r = sortFunc(r1[sn], r2[sn]) * (so == "asc" ? 1 : -1);
                     if (r != 0) {
                         return r;
                     }
@@ -1274,65 +1299,68 @@
             });
         }
         if (opts.view.onBeforeRender) {
-            opts.view.onBeforeRender.call(opts.view, _10f, data.rows);
+            opts.view.onBeforeRender.call(opts.view, target, data.rows);
         }
-        opts.view.render.call(opts.view, _10f, dc.body2, false);
-        opts.view.render.call(opts.view, _10f, dc.body1, true);
+        opts.view.render.call(opts.view, target, dc.body2, false);
+        opts.view.render.call(opts.view, target, dc.body1, true);
         if (opts.showFooter) {
-            opts.view.renderFooter.call(opts.view, _10f, dc.footer2, false);
-            opts.view.renderFooter.call(opts.view, _10f, dc.footer1, true);
+            opts.view.renderFooter.call(opts.view, target, dc.footer2, false);
+            opts.view.renderFooter.call(opts.view, target, dc.footer1, true);
         }
         if (opts.view.onAfterRender) {
-            opts.view.onAfterRender.call(opts.view, _10f);
+            opts.view.onAfterRender.call(opts.view, target);
         }
-        _110.ss.clean();
-        var _114 = $(_10f).datagrid("getPager");
-        if (_114.length) {
-            var _115 = _114.pagination("options");
-            if (_115.total != data.total) {
-                _114.pagination("refresh", {
+        state.ss.clean();
+        var pager = $(target).datagrid("getPager");
+        if (pager.length) {
+            var popts = pager.pagination("options");
+            if (popts.total != data.total) {
+                pager.pagination("refresh", {
                     pageNumber: opts.pageNumber,
                     total: data.total
                 });
-                if (opts.pageNumber != _115.pageNumber && _115.pageNumber > 0) {
-                    opts.pageNumber = _115.pageNumber;
-                    request(_10f);
+                if (opts.pageNumber != popts.pageNumber && popts.pageNumber > 0) {
+                    opts.pageNumber = popts.pageNumber;
+                    request(target);
                 }
             }
         }
-        _34(_10f);
+        fixRowHeight(target);
         dc.body2.triggerHandler("scroll");
-        $(_10f).datagrid("setSelectionState");
-        $(_10f).datagrid("autoSizeColumn");
-        opts.onLoadSuccess.call(_10f, data);
+        $(target).datagrid("setSelectionState");
+        $(target).datagrid("autoSizeColumn");
+        opts.onLoadSuccess.call(target, data);
     };
 
-    function setSelectionState(_117) {
-        var _118 = $.data(_117, "datagrid");
-        var opts = _118.options;
-        var dc = _118.dc;
+    /**
+	 * set row selection that previously selected
+	 */
+    function setSelectionState(target) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var dc = state.dc;
         dc.header1.add(dc.header2).find("input[type=checkbox]")._propAttr("checked", false);
         if (opts.idField) {
-            var _119 = $.data(_117, "treegrid") ? true : false;
-            var _11a = opts.onSelect;
-            var _11b = opts.onCheck;
+            var isTreeGrid = $.data(target, "treegrid") ? true : false;
+            var onSelect = opts.onSelect;
+            var onCheck = opts.onCheck;
             opts.onSelect = opts.onCheck = function () {};
-            var rows = opts.finder.getRows(_117);
+            var rows = opts.finder.getRows(target);
             for (var i = 0; i < rows.length; i++) {
                 var row = rows[i];
-                var _11c = _119 ? row[opts.idField] : $(_117).datagrid("getRowIndex", row[opts.idField]);
-                if (_11d(_118.selectedRows, row)) {
-                    _a7(_117, _11c, true, true);
+                var index = isTreeGrid ? row[opts.idField] : $(target).datagrid("getRowIndex", row[opts.idField]);
+                if (contains(state.selectedRows, row)) {
+                    selectRow(target, index, true, true);
                 }
-                if (_11d(_118.checkedRows, row)) {
-                    _a4(_117, _11c, true);
+                if (contains(state.checkedRows, row)) {
+                    checkRow(target, index, true);
                 }
             }
-            opts.onSelect = _11a;
-            opts.onCheck = _11b;
+            opts.onSelect = onSelect;
+            opts.onCheck = onCheck;
         }
 
-        function _11d(a, r) {
+        function contains(a, r) {
             for (var i = 0; i < a.length; i++) {
                 if (a[i][opts.idField] == r[opts.idField]) {
                     a[i] = r;
@@ -1343,12 +1371,16 @@
         };
     };
 
-    function _11e(_11f, row) {
-        var _120 = $.data(_11f, "datagrid");
-        var opts = _120.options;
-        var rows = _120.data.rows;
+    /**
+	 * Return the index of specified row or -1 if not found.
+	 * row: id value or row record
+	 */
+    function getRowIndex(target, row) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var rows = state.data.rows;
         if (typeof row == "object") {
-            return _2(rows, row);
+            return indexOfArray(rows, row);
         } else {
             for (var i = 0; i < rows.length; i++) {
                 if (rows[i][opts.idField] == row) {
@@ -1359,383 +1391,428 @@
         }
     };
 
-    function _121(_122) {
-        var _123 = $.data(_122, "datagrid");
-        var opts = _123.options;
-        var data = _123.data;
+    function getSelectedRows(target) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        // var data = state.data;
         if (opts.idField) {
-            return _123.selectedRows;
+            return state.selectedRows;
         } else {
             var rows = [];
-            opts.finder.getTr(_122, "", "selected", 2).each(function () {
-                rows.push(opts.finder.getRow(_122, $(this)));
+            opts.finder.getTr(target, "", "selected", 2).each(function () {
+                rows.push(opts.finder.getRow(target, $(this)));
             });
             return rows;
         }
     };
 
-    function _124(_125) {
-        var _126 = $.data(_125, "datagrid");
-        var opts = _126.options;
+    function getCheckedRows(target) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
         if (opts.idField) {
-            return _126.checkedRows;
+            return state.checkedRows;
         } else {
             var rows = [];
-            opts.finder.getTr(_125, "", "checked", 2).each(function () {
-                rows.push(opts.finder.getRow(_125, $(this)));
+            opts.finder.getTr(target, "", "checked", 2).each(function () {
+                rows.push(opts.finder.getRow(target, $(this)));
             });
             return rows;
         }
     };
 
-    function _127(_128, _129) {
-        var _12a = $.data(_128, "datagrid");
-        var dc = _12a.dc;
-        var opts = _12a.options;
-        var tr = opts.finder.getTr(_128, _129);
+    function scrollTo(target, index) {
+        var state = $.data(target, "datagrid");
+        var dc = state.dc;
+        var opts = state.options;
+        var tr = opts.finder.getTr(target, index);
         if (tr.length) {
             if (tr.closest("table").hasClass("datagrid-btable-frozen")) {
                 return;
             }
-            var _12b = dc.view2.children("div.datagrid-header")._outerHeight();
-            var _12c = dc.body2;
-            var _12d = opts.scrollbarSize;
-            if (_12c[0].offsetHeight && _12c[0].clientHeight && _12c[0].offsetHeight <= _12c[0].clientHeight) {
-                _12d = 0;
+            var headerHeight = dc.view2.children("div.datagrid-header")._outerHeight();
+            var body2 = dc.body2;
+            var scrollbarSize = opts.scrollbarSize;
+            if (body2[0].offsetHeight && body2[0].clientHeight && body2[0].offsetHeight <= body2[0].clientHeight) {
+                scrollbarSize = 0;
             }
-            var _12e = _12c.outerHeight(true) - _12c.outerHeight();
-            var top = tr.offset().top - dc.view2.offset().top - _12b - _12e;
+            var frozenHeight = body2.outerHeight(true) - body2.outerHeight();
+            var top = tr.offset().top - dc.view2.offset().top - headerHeight - frozenHeight;
             if (top < 0) {
-                _12c.scrollTop(_12c.scrollTop() + top);
+                body2.scrollTop(body2.scrollTop() + top);
             } else {
-                if (top + tr._outerHeight() > _12c.height() - _12d) {
-                    _12c.scrollTop(_12c.scrollTop() + top + tr._outerHeight() - _12c.height() + _12d);
+                if (top + tr._outerHeight() > body2.height() - scrollbarSize) {
+                    body2.scrollTop(body2.scrollTop() + top + tr._outerHeight() - body2.height() + scrollbarSize);
                 }
             }
         }
     };
 
-    function _9e(_12f, _130) {
-        var _131 = $.data(_12f, "datagrid");
-        var opts = _131.options;
-        opts.finder.getTr(_12f, _131.highlightIndex).removeClass("datagrid-row-over");
-        opts.finder.getTr(_12f, _130).addClass("datagrid-row-over");
-        _131.highlightIndex = _130;
+    function highlightRow(target, index) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        opts.finder.getTr(target, state.highlightIndex).removeClass("datagrid-row-over");
+        opts.finder.getTr(target, index).addClass("datagrid-row-over");
+        state.highlightIndex = index;
     };
 
-    function _a7(_132, _133, _134, _135) {
-        var _136 = $.data(_132, "datagrid");
-        var opts = _136.options;
-        var row = opts.finder.getRow(_132, _133);
+    /**
+	 * select a row, the row index start with 0
+	 */
+    function selectRow(target, index, notCheck, notScroll) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var row = opts.finder.getRow(target, index);
         if (!row) {
             return;
         }
-        if (opts.onBeforeSelect.apply(_132, _5(_132, [_133, row])) == false) {
+        if (opts.onBeforeSelect.apply(target, getArguments(target, [index, row])) == false) {
             return;
         }
         if (opts.singleSelect) {
-            _137(_132, true);
-            _136.selectedRows = [];
+            unselectAll(target, true);
+            state.selectedRows = [];
         }
-        if (!_134 && opts.checkOnSelect) {
-            _a4(_132, _133, true);
+        if (!notCheck && opts.checkOnSelect) {
+            checkRow(target, index, true);
         }
         if (opts.idField) {
-            _4(_136.selectedRows, opts.idField, row);
+            addArrayItem(state.selectedRows, opts.idField, row);
         }
-        opts.finder.getTr(_132, _133).addClass("datagrid-row-selected");
-        opts.onSelect.apply(_132, _5(_132, [_133, row]));
-        if (!_135 && opts.scrollOnSelect) {
-            _127(_132, _133);
+        opts.finder.getTr(target, index).addClass("datagrid-row-selected");
+        opts.onSelect.apply(target, getArguments(target, [index, row]));
+        if (!notScroll && opts.scrollOnSelect) {
+            scrollTo(target, index);
         }
     };
 
-    function _a8(_138, _139, _13a) {
-        var _13b = $.data(_138, "datagrid");
-        var dc = _13b.dc;
-        var opts = _13b.options;
-        var row = opts.finder.getRow(_138, _139);
+    /**
+	 * unselect a row
+	 */
+    function unselectRow(target, index, notCheck) {
+        var state = $.data(target, "datagrid");
+        // var dc = state.dc;
+        var opts = state.options;
+        var row = opts.finder.getRow(target, index);
         if (!row) {
             return;
         }
-        if (opts.onBeforeUnselect.apply(_138, _5(_138, [_139, row])) == false) {
+        if (opts.onBeforeUnselect.apply(target, getArguments(target, [index, row])) == false) {
             return;
         }
-        if (!_13a && opts.checkOnSelect) {
-            _a5(_138, _139, true);
+        if (!notCheck && opts.checkOnSelect) {
+            uncheckRow(target, index, true);
         }
-        opts.finder.getTr(_138, _139).removeClass("datagrid-row-selected");
+        opts.finder.getTr(target, index).removeClass("datagrid-row-selected");
         if (opts.idField) {
-            _3(_13b.selectedRows, opts.idField, row[opts.idField]);
+            removeArrayItem(state.selectedRows, opts.idField, row[opts.idField]);
         }
-        opts.onUnselect.apply(_138, _5(_138, [_139, row]));
+        opts.onUnselect.apply(target, getArguments(target, [index, row]));
     };
 
-    function _13c(_13d, _13e) {
-        var _13f = $.data(_13d, "datagrid");
-        var opts = _13f.options;
-        var rows = opts.finder.getRows(_13d);
-        var _140 = $.data(_13d, "datagrid").selectedRows;
-        if (!_13e && opts.checkOnSelect) {
-            _8b(_13d, true);
+    /**
+	 * select all rows on current page
+	 */
+    function selectAll(target, notCheck) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var rows = opts.finder.getRows(target);
+        var selectedRows = $.data(target, "datagrid").selectedRows;
+        if (!notCheck && opts.checkOnSelect) {
+            checkAll(target, true);
         }
-        opts.finder.getTr(_13d, "", "allbody").addClass("datagrid-row-selected");
+        opts.finder.getTr(target, "", "allbody").addClass("datagrid-row-selected");
         if (opts.idField) {
             for (var _141 = 0; _141 < rows.length; _141++) {
-                _4(_140, opts.idField, rows[_141]);
+                addArrayItem(selectedRows, opts.idField, rows[_141]);
             }
         }
-        opts.onSelectAll.call(_13d, rows);
+        opts.onSelectAll.call(target, rows);
     };
 
-    function _137(_142, _143) {
-        var _144 = $.data(_142, "datagrid");
-        var opts = _144.options;
-        var rows = opts.finder.getRows(_142);
-        var _145 = $.data(_142, "datagrid").selectedRows;
-        if (!_143 && opts.checkOnSelect) {
-            _8c(_142, true);
+	/**
+	 * unselect all rows on current page
+	 */
+    function unselectAll(target, notCheck) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var rows = opts.finder.getRows(target);
+        var selectedRows = $.data(target, "datagrid").selectedRows;
+        if (!notCheck && opts.checkOnSelect) {
+            uncheckAll(target, true);
         }
-        opts.finder.getTr(_142, "", "selected").removeClass("datagrid-row-selected");
+        opts.finder.getTr(target, "", "selected").removeClass("datagrid-row-selected");
         if (opts.idField) {
-            for (var _146 = 0; _146 < rows.length; _146++) {
-                _3(_145, opts.idField, rows[_146][opts.idField]);
+            for (var index = 0; index < rows.length; index++) {
+                removeArrayItem(selectedRows, opts.idField, rows[index][opts.idField]);
             }
         }
-        opts.onUnselectAll.call(_142, rows);
+        opts.onUnselectAll.call(target, rows);
     };
 
-    function _a4(_147, _148, _149) {
-        var _14a = $.data(_147, "datagrid");
-        var opts = _14a.options;
-        var row = opts.finder.getRow(_147, _148);
+    /**
+	 * check a row, the row index start with 0
+	 */
+    function checkRow(target, index, notSelect) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var row = opts.finder.getRow(target, index);
         if (!row) {
             return;
         }
-        if (opts.onBeforeCheck.apply(_147, _5(_147, [_148, row])) == false) {
+        if (opts.onBeforeCheck.apply(target, getArguments(target, [index, row])) == false) {
             return;
         }
         if (opts.singleSelect && opts.selectOnCheck) {
-            _8c(_147, true);
-            _14a.checkedRows = [];
+            uncheckAll(target, true);
+            state.checkedRows = [];
         }
-        if (!_149 && opts.selectOnCheck) {
-            _a7(_147, _148, true);
+        if (!notSelect && opts.selectOnCheck) {
+            selectRow(target, index, true);
         }
-        var tr = opts.finder.getTr(_147, _148).addClass("datagrid-row-checked");
+        var tr = opts.finder.getTr(target, index).addClass("datagrid-row-checked");
         tr.find("div.datagrid-cell-check input[type=checkbox]")._propAttr("checked", true);
-        tr = opts.finder.getTr(_147, "", "checked", 2);
-        if (tr.length == opts.finder.getRows(_147).length) {
-            var dc = _14a.dc;
+        tr = opts.finder.getTr(target, "", "checked", 2);
+        if (tr.length == opts.finder.getRows(target).length) {
+            var dc = state.dc;
             dc.header1.add(dc.header2).find("input[type=checkbox]")._propAttr("checked", true);
         }
         if (opts.idField) {
-            _4(_14a.checkedRows, opts.idField, row);
+            addArrayItem(state.checkedRows, opts.idField, row);
         }
-        opts.onCheck.apply(_147, _5(_147, [_148, row]));
+        opts.onCheck.apply(target, getArguments(target, [index, row]));
     };
 
-    function _a5(_14b, _14c, _14d) {
-        var _14e = $.data(_14b, "datagrid");
-        var opts = _14e.options;
-        var row = opts.finder.getRow(_14b, _14c);
+    /**
+	 * uncheck a row
+	 */
+    function uncheckRow(target, index, notSelect) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var row = opts.finder.getRow(target, index);
         if (!row) {
             return;
         }
-        if (opts.onBeforeUncheck.apply(_14b, _5(_14b, [_14c, row])) == false) {
+        if (opts.onBeforeUncheck.apply(target, getArguments(target, [index, row])) == false) {
             return;
         }
-        if (!_14d && opts.selectOnCheck) {
-            _a8(_14b, _14c, true);
+        if (!notSelect && opts.selectOnCheck) {
+            unselectRow(target, index, true);
         }
-        var tr = opts.finder.getTr(_14b, _14c).removeClass("datagrid-row-checked");
+        var tr = opts.finder.getTr(target, index).removeClass("datagrid-row-checked");
         tr.find("div.datagrid-cell-check input[type=checkbox]")._propAttr("checked", false);
-        var dc = _14e.dc;
-        var _14f = dc.header1.add(dc.header2);
-        _14f.find("input[type=checkbox]")._propAttr("checked", false);
+        var dc = state.dc;
+        var header = dc.header1.add(dc.header2);
+        header.find("input[type=checkbox]")._propAttr("checked", false);
         if (opts.idField) {
-            _3(_14e.checkedRows, opts.idField, row[opts.idField]);
+            removeArrayItem(state.checkedRows, opts.idField, row[opts.idField]);
         }
-        opts.onUncheck.apply(_14b, _5(_14b, [_14c, row]));
+        opts.onUncheck.apply(target, getArguments(target, [index, row]));
     };
 
-    function _8b(_150, _151) {
-        var _152 = $.data(_150, "datagrid");
-        var opts = _152.options;
-        var rows = opts.finder.getRows(_150);
-        if (!_151 && opts.selectOnCheck) {
-            _13c(_150, true);
+    /**
+	 * check all checkbox on current page
+	 */
+    function checkAll(target, notSelect) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var rows = opts.finder.getRows(target);
+        if (!notSelect && opts.selectOnCheck) {
+            selectAll(target, true);
         }
-        var dc = _152.dc;
+        var dc = state.dc;
         var hck = dc.header1.add(dc.header2).find("input[type=checkbox]");
-        var bck = opts.finder.getTr(_150, "", "allbody").addClass("datagrid-row-checked").find("div.datagrid-cell-check input[type=checkbox]");
+        var bck = opts.finder.getTr(target, "", "allbody").addClass("datagrid-row-checked").find("div.datagrid-cell-check input[type=checkbox]");
         hck.add(bck)._propAttr("checked", true);
         if (opts.idField) {
             for (var i = 0; i < rows.length; i++) {
-                _4(_152.checkedRows, opts.idField, rows[i]);
+                addArrayItem(state.checkedRows, opts.idField, rows[i]);
             }
         }
-        opts.onCheckAll.call(_150, rows);
+        opts.onCheckAll.call(target, rows);
     };
 
-    function _8c(_153, _154) {
-        var _155 = $.data(_153, "datagrid");
-        var opts = _155.options;
-        var rows = opts.finder.getRows(_153);
-        if (!_154 && opts.selectOnCheck) {
-            _137(_153, true);
+    /**
+	 * uncheck all checkbox on current page
+	 */
+    function uncheckAll(target, notSelect) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var rows = opts.finder.getRows(target);
+        if (!notSelect && opts.selectOnCheck) {
+            unselectAll(target, true);
         }
-        var dc = _155.dc;
+        var dc = state.dc;
         var hck = dc.header1.add(dc.header2).find("input[type=checkbox]");
-        var bck = opts.finder.getTr(_153, "", "checked").removeClass("datagrid-row-checked").find("div.datagrid-cell-check input[type=checkbox]");
+        var bck = opts.finder.getTr(target, "", "checked").removeClass("datagrid-row-checked").find("div.datagrid-cell-check input[type=checkbox]");
         hck.add(bck)._propAttr("checked", false);
         if (opts.idField) {
             for (var i = 0; i < rows.length; i++) {
-                _3(_155.checkedRows, opts.idField, rows[i][opts.idField]);
+                removeArrayItem(state.checkedRows, opts.idField, rows[i][opts.idField]);
             }
         }
-        opts.onUncheckAll.call(_153, rows);
+        opts.onUncheckAll.call(target, rows);
     };
 
-    function _156(_157, _158) {
-        var opts = $.data(_157, "datagrid").options;
-        var tr = opts.finder.getTr(_157, _158);
-        var row = opts.finder.getRow(_157, _158);
+    /**
+	 * Begin edit a row
+	 */
+    function beginEdit(target, index) {
+        var opts = $.data(target, "datagrid").options;
+        var tr = opts.finder.getTr(target, index);
+        var row = opts.finder.getRow(target, index);
         if (tr.hasClass("datagrid-row-editing")) {
             return;
         }
-        if (opts.onBeforeEdit.apply(_157, _5(_157, [_158, row])) == false) {
+        if (opts.onBeforeEdit.apply(target, getArguments(target, [index, row])) == false) {
             return;
         }
         tr.addClass("datagrid-row-editing");
-        _159(_157, _158);
-        _f8(_157);
+        createEditor(target, index);
+        fixEditableSize(target);
         tr.find("div.datagrid-editable").each(function () {
-            var _15a = $(this).parent().attr("field");
+            var field = $(this).parent().attr("field");
             var ed = $.data(this, "datagrid.editor");
-            ed.actions.setValue(ed.target, row[_15a]);
+            ed.actions.setValue(ed.target, row[field]);
         });
-        _15b(_157, _158);
-        opts.onBeginEdit.apply(_157, _5(_157, [_158, row]));
+        validateRow(target, index);
+        opts.onBeginEdit.apply(target, getArguments(target, [index, row]));
     };
 
-    function _15c(_15d, _15e, _15f) {
-        var _160 = $.data(_15d, "datagrid");
-        var opts = _160.options;
-        var _161 = _160.updatedRows;
-        var _162 = _160.insertedRows;
-        var tr = opts.finder.getTr(_15d, _15e);
-        var row = opts.finder.getRow(_15d, _15e);
+    /**
+	 * Stop edit a row.
+	 * index: the row index.
+	 * cancel: if true, restore the row data.
+	 */
+    function endEdit(target, index, cancel) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var updatedRows = state.updatedRows;
+        var insertedRows = state.insertedRows;
+        var tr = opts.finder.getTr(target, index);
+        var row = opts.finder.getRow(target, index);
         if (!tr.hasClass("datagrid-row-editing")) {
             return;
         }
-        if (!_15f) {
-            if (!_15b(_15d, _15e)) {
+        if (!cancel) {
+            if (!validateRow(target, index)) {
                 return;
             }
-            var _163 = false;
-            var _164 = {};
+            var changed = false;
+            var changes = {};
             tr.find("div.datagrid-editable").each(function () {
-                var _165 = $(this).parent().attr("field");
+                var field = $(this).parent().attr("field");
                 var ed = $.data(this, "datagrid.editor");
                 var t = $(ed.target);
-                var _166 = t.data("textbox") ? t.textbox("textbox") : t;
-                if (_166.is(":focus")) {
-                    _166.triggerHandler("blur");
+                var input = t.data("textbox") ? t.textbox("textbox") : t;
+                if (input.is(":focus")) {
+                    input.triggerHandler("blur");
                 }
-                var _167 = ed.actions.getValue(ed.target);
-                if (row[_165] !== _167) {
-                    row[_165] = _167;
-                    _163 = true;
-                    _164[_165] = _167;
+                var value = ed.actions.getValue(ed.target);
+                if (row[field] !== value) {
+                    row[field] = value;
+                    changed = true;
+                    changes[field] = value;
                 }
             });
-            if (_163) {
-                if (_2(_162, row) == -1) {
-                    if (_2(_161, row) == -1) {
-                        _161.push(row);
+            if (changed) {
+                if (indexOfArray(insertedRows, row) == -1) {
+                    if (indexOfArray(updatedRows, row) == -1) {
+                        updatedRows.push(row);
                     }
                 }
             }
-            opts.onEndEdit.apply(_15d, _5(_15d, [_15e, row, _164]));
+            opts.onEndEdit.apply(target, getArguments(target, [index, row, changes]));
         }
         tr.removeClass("datagrid-row-editing");
-        _168(_15d, _15e);
-        $(_15d).datagrid("refreshRow", _15e);
-        if (!_15f) {
-            opts.onAfterEdit.apply(_15d, _5(_15d, [_15e, row, _164]));
+        destroyEditor(target, index);
+        $(target).datagrid("refreshRow", index);
+        if (!cancel) {
+            opts.onAfterEdit.apply(target, getArguments(target, [index, row, changes]));
         } else {
-            opts.onCancelEdit.apply(_15d, _5(_15d, [_15e, row]));
+            opts.onCancelEdit.apply(target, getArguments(target, [index, row]));
         }
     };
 
-    function _169(_16a, _16b) {
-        var opts = $.data(_16a, "datagrid").options;
-        var tr = opts.finder.getTr(_16a, _16b);
-        var _16c = [];
+    /**
+	 * get the specified row editors
+	 */
+    function getEditors(target, index) {
+        var opts = $.data(target, "datagrid").options;
+        var tr = opts.finder.getTr(target, index);
+        var editors = [];
         tr.children("td").each(function () {
             var cell = $(this).find("div.datagrid-editable");
             if (cell.length) {
                 var ed = $.data(cell[0], "datagrid.editor");
-                _16c.push(ed);
+                editors.push(ed);
             }
         });
-        return _16c;
+        return editors;
     };
 
-    function _16d(_16e, _16f) {
-        var _170 = _169(_16e, _16f.index != undefined ? _16f.index : _16f.id);
-        for (var i = 0; i < _170.length; i++) {
-            if (_170[i].field == _16f.field) {
-                return _170[i];
+    /**
+	 * get the cell editor
+	 * param contains two parameters: index and field
+	 */
+    function getEditor(target, param) {
+        var editors = getEditors(target, param.index != undefined ? param.index : param.id);
+        for (var i = 0; i < editors.length; i++) {
+            if (editors[i].field == param.field) {
+                return editors[i];
             }
         }
         return null;
     };
 
-    function _159(_171, _172) {
-        var opts = $.data(_171, "datagrid").options;
-        var tr = opts.finder.getTr(_171, _172);
+    /**
+	 * create the row editor and adjust the row height.
+	 */
+    function createEditor(target, index) {
+        var opts = $.data(target, "datagrid").options;
+        var tr = opts.finder.getTr(target, index);
         tr.children("td").each(function () {
             var cell = $(this).find("div.datagrid-cell");
-            var _173 = $(this).attr("field");
-            var col = getColumnOption(_171, _173);
+            var field = $(this).attr("field");
+            var col = getColumnOption(target, field);
             if (col && col.editor) {
-                var _174, _175;
+                var edittype, editoptions;
                 if (typeof col.editor == "string") {
-                    _174 = col.editor;
+                    edittype = col.editor;
                 } else {
-                    _174 = col.editor.type;
-                    _175 = col.editor.options;
+                    edittype = col.editor.type;
+                    editoptions = col.editor.options;
                 }
-                var _176 = opts.editors[_174];
-                if (_176) {
-                    var _177 = cell.html();
-                    var _178 = cell._outerWidth();
+                var editor = opts.editors[edittype];
+                if (editor) {
+                    var oldHtml = cell.html();
+                    var width = cell._outerWidth();
                     cell.addClass("datagrid-editable");
-                    cell._outerWidth(_178);
+                    cell._outerWidth(width);
                     cell.html("<table border=\"0\" cellspacing=\"0\" cellpadding=\"1\"><tr><td></td></tr></table>");
                     cell.children("table").bind("click dblclick contextmenu", function (e) {
                         e.stopPropagation();
                     });
                     $.data(cell[0], "datagrid.editor", {
-                        actions: _176,
-                        target: _176.init(cell.find("td"), $.extend({
+                        actions: editor,
+                        target: editor.init(cell.find("td"), $.extend({
                             height: opts.editorHeight
-                        }, _175)),
-                        field: _173,
-                        type: _174,
-                        oldHtml: _177
+                        }, editoptions)),
+                        field: field,
+                        type: edittype,
+                        oldHtml: oldHtml
                     });
                 }
             }
         });
-        _34(_171, _172, true);
+        fixRowHeight(target, index, true);
     };
 
-    function _168(_179, _17a) {
-        var opts = $.data(_179, "datagrid").options;
-        var tr = opts.finder.getTr(_179, _17a);
+    /**
+	 * destroy the row editor and restore the row height.
+	 */
+    function destroyEditor(target, index) {
+        var opts = $.data(target, "datagrid").options;
+        var tr = opts.finder.getTr(target, index);
         tr.children("td").each(function () {
             var cell = $(this).find("div.datagrid-editable");
             if (cell.length) {
@@ -1751,37 +1828,44 @@
         });
     };
 
-    function _15b(_17b, _17c) {
-        var tr = $.data(_17b, "datagrid").options.finder.getTr(_17b, _17c);
+    /**
+	 * Validate while editing, if valid return true.
+	 */
+    function validateRow(target, index) {
+        var tr = $.data(target, "datagrid").options.finder.getTr(target, index);
         if (!tr.hasClass("datagrid-row-editing")) {
             return true;
         }
         var vbox = tr.find(".validatebox-text");
         vbox.validatebox("validate");
         vbox.trigger("mouseleave");
-        var _17d = tr.find(".validatebox-invalid");
-        return _17d.length == 0;
+        var invalidbox = tr.find(".validatebox-invalid");
+        return invalidbox.length == 0;
     };
 
-    function _17e(_17f, _180) {
-        var _181 = $.data(_17f, "datagrid").insertedRows;
-        var _182 = $.data(_17f, "datagrid").deletedRows;
-        var _183 = $.data(_17f, "datagrid").updatedRows;
-        if (!_180) {
+    /**
+	 * Get changed rows, if state parameter is not assigned, return all changed.
+	 * state: inserted,deleted,updated
+	 */
+    function getChanges(target, state) {
+        var insertedRows = $.data(target, "datagrid").insertedRows;
+        var deletedRows = $.data(target, "datagrid").deletedRows;
+        var updatedRows = $.data(target, "datagrid").updatedRows;
+        if (!state) {
             var rows = [];
-            rows = rows.concat(_181);
-            rows = rows.concat(_182);
-            rows = rows.concat(_183);
+            rows = rows.concat(insertedRows);
+            rows = rows.concat(deletedRows);
+            rows = rows.concat(updatedRows);
             return rows;
         } else {
-            if (_180 == "inserted") {
-                return _181;
+            if (state == "inserted") {
+                return insertedRows;
             } else {
-                if (_180 == "deleted") {
-                    return _182;
+                if (state == "deleted") {
+                    return deletedRows;
                 } else {
-                    if (_180 == "updated") {
-                        return _183;
+                    if (state == "updated") {
+                        return updatedRows;
                     }
                 }
             }
@@ -1789,114 +1873,114 @@
         return [];
     };
 
-    function _184(_185, _186) {
-        var _187 = $.data(_185, "datagrid");
-        var opts = _187.options;
-        var data = _187.data;
-        var _188 = _187.insertedRows;
-        var _189 = _187.deletedRows;
-        $(_185).datagrid("cancelEdit", _186);
-        var row = opts.finder.getRow(_185, _186);
-        if (_2(_188, row) >= 0) {
-            _3(_188, row);
+    function deleteRow(target, index) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var data = state.data;
+        var insertedRows = state.insertedRows;
+        var deletedRows = state.deletedRows;
+        $(target).datagrid("cancelEdit", index);
+        var row = opts.finder.getRow(target, index);
+        if (indexOfArray(insertedRows, row) >= 0) {
+            removeArrayItem(insertedRows, row);
         } else {
-            _189.push(row);
+            deletedRows.push(row);
         }
-        _3(_187.selectedRows, opts.idField, row[opts.idField]);
-        _3(_187.checkedRows, opts.idField, row[opts.idField]);
-        opts.view.deleteRow.call(opts.view, _185, _186);
+        removeArrayItem(state.selectedRows, opts.idField, row[opts.idField]);
+        removeArrayItem(state.checkedRows, opts.idField, row[opts.idField]);
+        opts.view.deleteRow.call(opts.view, target, index);
         if (opts.height == "auto") {
-            _34(_185);
+            fixRowHeight(target);
         }
-        $(_185).datagrid("getPager").pagination("refresh", {
+        $(target).datagrid("getPager").pagination("refresh", {
             total: data.total
         });
     };
 
-    function _18a(_18b, _18c) {
-        var data = $.data(_18b, "datagrid").data;
-        var view = $.data(_18b, "datagrid").options.view;
-        var _18d = $.data(_18b, "datagrid").insertedRows;
-        view.insertRow.call(view, _18b, _18c.index, _18c.row);
-        _18d.push(_18c.row);
-        $(_18b).datagrid("getPager").pagination("refresh", {
+    function insertRow(target, param) {
+        var data = $.data(target, "datagrid").data;
+        var view = $.data(target, "datagrid").options.view;
+        var insertedRows = $.data(target, "datagrid").insertedRows;
+        view.insertRow.call(view, target, param.index, param.row);
+        insertedRows.push(param.row);
+        $(target).datagrid("getPager").pagination("refresh", {
             total: data.total
         });
     };
 
-    function _18e(_18f, row) {
-        var data = $.data(_18f, "datagrid").data;
-        var view = $.data(_18f, "datagrid").options.view;
-        var _190 = $.data(_18f, "datagrid").insertedRows;
-        view.insertRow.call(view, _18f, null, row);
-        _190.push(row);
-        $(_18f).datagrid("getPager").pagination("refresh", {
+    function appendRow(target, row) {
+        var data = $.data(target, "datagrid").data;
+        var view = $.data(target, "datagrid").options.view;
+        var insertedRows = $.data(target, "datagrid").insertedRows;
+        view.insertRow.call(view, target, null, row);
+        insertedRows.push(row);
+        $(target).datagrid("getPager").pagination("refresh", {
             total: data.total
         });
     };
 
-    function _191(_192, _193) {
-        var _194 = $.data(_192, "datagrid");
-        var opts = _194.options;
-        var row = opts.finder.getRow(_192, _193.index);
-        var _195 = false;
-        _193.row = _193.row || {};
-        for (var _196 in _193.row) {
-            if (row[_196] !== _193.row[_196]) {
-                _195 = true;
+    function updateRow(target, param) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var row = opts.finder.getRow(target, param.index);
+        var updated = false;
+        param.row = param.row || {};
+        for (var field in param.row) {
+            if (row[field] !== param.row[field]) {
+                updated = true;
                 break;
             }
         }
-        if (_195) {
-            if (_2(_194.insertedRows, row) == -1) {
-                if (_2(_194.updatedRows, row) == -1) {
-                    _194.updatedRows.push(row);
+        if (updated) {
+            if (indexOfArray(state.insertedRows, row) == -1) {
+                if (indexOfArray(state.updatedRows, row) == -1) {
+                    state.updatedRows.push(row);
                 }
             }
-            opts.view.updateRow.call(opts.view, _192, _193.index, _193.row);
+            opts.view.updateRow.call(opts.view, target, param.index, param.row);
         }
     };
 
-    function _197(_198) {
-        var _199 = $.data(_198, "datagrid");
-        var data = _199.data;
+    function initChanges(target) {
+        var state = $.data(target, "datagrid");
+        var data = state.data;
         var rows = data.rows;
-        var _19a = [];
+        var originalRows = [];
         for (var i = 0; i < rows.length; i++) {
-            _19a.push($.extend({}, rows[i]));
+            originalRows.push($.extend({}, rows[i]));
         }
-        _199.originalRows = _19a;
-        _199.updatedRows = [];
-        _199.insertedRows = [];
-        _199.deletedRows = [];
+        state.originalRows = originalRows;
+        state.updatedRows = [];
+        state.insertedRows = [];
+        state.deletedRows = [];
     };
 
-    function _19b(_19c) {
-        var data = $.data(_19c, "datagrid").data;
+    function acceptChanges(target) {
+        var data = $.data(target, "datagrid").data;
         var ok = true;
         for (var i = 0, len = data.rows.length; i < len; i++) {
-            if (_15b(_19c, i)) {
-                $(_19c).datagrid("endEdit", i);
+            if (validateRow(target, i)) {
+                $(target).datagrid("endEdit", i);
             } else {
                 ok = false;
             }
         }
         if (ok) {
-            _197(_19c);
+            initChanges(target);
         }
     };
 
-    function _19d(_19e) {
-        var _19f = $.data(_19e, "datagrid");
-        var opts = _19f.options;
-        var _1a0 = _19f.originalRows;
-        var _1a1 = _19f.insertedRows;
-        var _1a2 = _19f.deletedRows;
-        var _1a3 = _19f.selectedRows;
-        var _1a4 = _19f.checkedRows;
-        var data = _19f.data;
+    function rejectChanges(target) {
+        var state = $.data(target, "datagrid");
+        var opts = state.options;
+        var originalRows = state.originalRows;
+        var insertedRows = state.insertedRows;
+        var deletedRows = state.deletedRows;
+        var selectedRows = state.selectedRows;
+        var checkedRows = state.checkedRows;
+        var data = state.data;
 
-        function _1a5(a) {
+        function getIds(a) {
             var ids = [];
             for (var i = 0; i < a.length; i++) {
                 ids.push(a[i][opts.idField]);
@@ -1904,94 +1988,94 @@
             return ids;
         };
 
-        function _1a6(ids, _1a7) {
+        function doSelect(ids, action) {
             for (var i = 0; i < ids.length; i++) {
-                var _1a8 = _11e(_19e, ids[i]);
-                if (_1a8 >= 0) {
-                    (_1a7 == "s" ? _a7 : _a4)(_19e, _1a8, true);
+                var index = getRowIndex(target, ids[i]);
+                if (index >= 0) {
+                    (action == "s" ? selectRow : checkRow)(target, index, true);
                 }
             }
         };
         for (var i = 0; i < data.rows.length; i++) {
-            $(_19e).datagrid("cancelEdit", i);
+            $(target).datagrid("cancelEdit", i);
         }
-        var _1a9 = _1a5(_1a3);
-        var _1aa = _1a5(_1a4);
-        _1a3.splice(0, _1a3.length);
-        _1a4.splice(0, _1a4.length);
-        data.total += _1a2.length - _1a1.length;
-        data.rows = _1a0;
-        _c2(_19e, data);
-        _1a6(_1a9, "s");
-        _1a6(_1aa, "c");
-        _197(_19e);
+        var selectedIds = getIds(selectedRows);
+        var checkedIds = getIds(checkedRows);
+        selectedRows.splice(0, selectedRows.length);
+        checkedRows.splice(0, checkedRows.length);
+        data.total += deletedRows.length - insertedRows.length;
+        data.rows = originalRows;
+        loadData(target, data);
+        doSelect(selectedIds, "s");
+        doSelect(checkedIds, "c");
+        initChanges(target);
     };
 
-    function request(_1ab, _1ac, cb) {
-        var opts = $.data(_1ab, "datagrid").options;
-        if (_1ac) {
-            opts.queryParams = _1ac;
+    function request(target, params, cb) {
+        var opts = $.data(target, "datagrid").options;
+        if (params) {
+            opts.queryParams = params;
         }
-        var _1ad = $.extend({}, opts.queryParams);
+        var param = $.extend({}, opts.queryParams);
         if (opts.pagination) {
-            $.extend(_1ad, {
+            $.extend(param, {
                 page: opts.pageNumber || 1,
                 rows: opts.pageSize
             });
         }
         if (opts.sortName && opts.remoteSort) {
-            $.extend(_1ad, {
+            $.extend(param, {
                 sort: opts.sortName,
                 order: opts.sortOrder
             });
         }
-        if (opts.onBeforeLoad.call(_1ab, _1ad) == false) {
-            opts.view.setEmptyMsg(_1ab);
+        if (opts.onBeforeLoad.call(target, param) == false) {
+            opts.view.setEmptyMsg(target);
             return;
         }
-        $(_1ab).datagrid("loading");
-        var _1ae = opts.loader.call(_1ab, _1ad, function (data) {
-            $(_1ab).datagrid("loaded");
-            $(_1ab).datagrid("loadData", data);
+        $(target).datagrid("loading");
+        var result = opts.loader.call(target, param, function (data) {
+            $(target).datagrid("loaded");
+            $(target).datagrid("loadData", data);
             if (cb) {
                 cb();
             }
         }, function () {
-            $(_1ab).datagrid("loaded");
-            opts.onLoadError.apply(_1ab, arguments);
+            $(target).datagrid("loaded");
+            opts.onLoadError.apply(target, arguments);
         });
-        if (_1ae == false) {
-            $(_1ab).datagrid("loaded");
-            opts.view.setEmptyMsg(_1ab);
+        if (result == false) {
+            $(target).datagrid("loaded");
+            opts.view.setEmptyMsg(target);
         }
     };
 
-    function _1af(_1b0, _1b1) {
-        var opts = $.data(_1b0, "datagrid").options;
-        _1b1.type = _1b1.type || "body";
-        _1b1.rowspan = _1b1.rowspan || 1;
-        _1b1.colspan = _1b1.colspan || 1;
-        if (_1b1.rowspan == 1 && _1b1.colspan == 1) {
+    function mergeCells(target, param) {
+        var opts = $.data(target, "datagrid").options;
+        param.type = param.type || "body";
+        param.rowspan = param.rowspan || 1;
+        param.colspan = param.colspan || 1;
+        if (param.rowspan == 1 && param.colspan == 1) {
             return;
         }
-        var tr = opts.finder.getTr(_1b0, (_1b1.index != undefined ? _1b1.index : _1b1.id), _1b1.type);
+        var tr = opts.finder.getTr(target, (param.index != undefined ? param.index : param.id), param.type);
         if (!tr.length) {
             return;
         }
-        var td = tr.find("td[field=\"" + _1b1.field + "\"]");
-        td.attr("rowspan", _1b1.rowspan).attr("colspan", _1b1.colspan);
+        var td = tr.find("td[field=\"" + param.field + "\"]");
+        td.attr("rowspan", param.rowspan).attr("colspan", param.colspan);
         td.addClass("datagrid-td-merged");
-        _1b2(td.next(), _1b1.colspan - 1);
-        for (var i = 1; i < _1b1.rowspan; i++) {
+        _hidecell(td.next(), param.colspan - 1);
+        for (var i = 1; i < param.rowspan; i++) {
             tr = tr.next();
             if (!tr.length) {
                 break;
             }
-            _1b2(tr.find("td[field=\"" + _1b1.field + "\"]"), _1b1.colspan);
+            _hidecell(tr.find("td[field=\"" + param.field + "\"]"), param.colspan);
         }
-        _f7(_1b0, td);
+        fixMergedSize(target, td);
 
-        function _1b2(td, _1b3) {
+        function _hidecell(td, _1b3) {
             for (var i = 0; i < _1b3; i++) {
                 td.hide();
                 td = td.next();
@@ -2222,37 +2306,37 @@
                 setSize(this, param);
             });
         },
-        load: function (jq, _1e4) {
+        load: function (jq, params) {
             return jq.each(function () {
                 var opts = $(this).datagrid("options");
-                if (typeof _1e4 == "string") {
-                    opts.url = _1e4;
-                    _1e4 = null;
+                if (typeof params == "string") {
+                    opts.url = params;
+                    params = null;
                 }
                 opts.pageNumber = 1;
-                var _1e5 = $(this).datagrid("getPager");
-                _1e5.pagination("refresh", {
+                var pager = $(this).datagrid("getPager");
+                pager.pagination("refresh", {
                     pageNumber: 1
                 });
-                request(this, _1e4);
+                request(this, params);
             });
         },
-        reload: function (jq, _1e6) {
+        reload: function (jq, params) {
             return jq.each(function () {
                 var opts = $(this).datagrid("options");
-                if (typeof _1e6 == "string") {
-                    opts.url = _1e6;
-                    _1e6 = null;
+                if (typeof params == "string") {
+                    opts.url = params;
+                    params = null;
                 }
-                request(this, _1e6);
+                request(this, params);
             });
         },
-        reloadFooter: function (jq, _1e7) {
+        reloadFooter: function (jq, footer) {
             return jq.each(function () {
                 var opts = $.data(this, "datagrid").options;
                 var dc = $.data(this, "datagrid").dc;
-                if (_1e7) {
-                    $.data(this, "datagrid").footer = _1e7;
+                if (footer) {
+                    $.data(this, "datagrid").footer = footer;
                 }
                 if (opts.showFooter) {
                     opts.view.renderFooter.call(opts.view, this, dc.footer2, false);
@@ -2269,10 +2353,10 @@
                 var opts = $.data(this, "datagrid").options;
                 $(this).datagrid("getPager").pagination("loading");
                 if (opts.loadMsg) {
-                    var _1e8 = $(this).datagrid("getPanel");
-                    if (!_1e8.children("div.datagrid-mask").length) {
-                        $("<div class=\"datagrid-mask\" style=\"display:block\"></div>").appendTo(_1e8);
-                        var msg = $("<div class=\"datagrid-mask-msg\" style=\"display:block;left:50%\"></div>").html(opts.loadMsg).appendTo(_1e8);
+                    var panel = $(this).datagrid("getPanel");
+                    if (!panel.children("div.datagrid-mask").length) {
+                        $("<div class=\"datagrid-mask\" style=\"display:block\"></div>").appendTo(panel);
+                        var msg = $("<div class=\"datagrid-mask-msg\" style=\"display:block;left:50%\"></div>").html(opts.loadMsg).appendTo(panel);
                         msg._outerHeight(40);
                         msg.css({
                             marginLeft: (-msg.outerWidth() / 2),
@@ -2285,40 +2369,40 @@
         loaded: function (jq) {
             return jq.each(function () {
                 $(this).datagrid("getPager").pagination("loaded");
-                var _1e9 = $(this).datagrid("getPanel");
-                _1e9.children("div.datagrid-mask-msg").remove();
-                _1e9.children("div.datagrid-mask").remove();
+                var panel = $(this).datagrid("getPanel");
+                panel.children("div.datagrid-mask-msg").remove();
+                panel.children("div.datagrid-mask").remove();
             });
         },
         fitColumns: function (jq) {
             return jq.each(function () {
-                _ce(this);
+                fitColumns(this);
             });
         },
-        fixColumnSize: function (jq, _1ea) {
+        fixColumnSize: function (jq, field) {
             return jq.each(function () {
-                _f1(this, _1ea);
+                fixColumnSize(this, field);
             });
         },
-        fixRowHeight: function (jq, _1eb) {
+        fixRowHeight: function (jq, index) {
             return jq.each(function () {
-                _34(this, _1eb);
+                fixRowHeight(this, index);
             });
         },
-        freezeRow: function (jq, _1ec) {
+        freezeRow: function (jq, index) {
             return jq.each(function () {
-                _46(this, _1ec);
+                freezeRow(this, index);
             });
         },
-        autoSizeColumn: function (jq, _1ed) {
+        autoSizeColumn: function (jq, field) {
             return jq.each(function () {
-                _e2(this, _1ed);
+                autoSizeColumn(this, field);
             });
         },
         loadData: function (jq, data) {
             return jq.each(function () {
-                _c2(this, data);
-                _197(this);
+                loadData(this, data);
+                initChanges(this);
             });
         },
         getData: function (jq) {
@@ -2331,224 +2415,224 @@
             return $.data(jq[0], "datagrid").footer;
         },
         getRowIndex: function (jq, id) {
-            return _11e(jq[0], id);
+            return getRowIndex(jq[0], id);
         },
         getChecked: function (jq) {
-            return _124(jq[0]);
+            return getCheckedRows(jq[0]);
         },
         getSelected: function (jq) {
-            var rows = _121(jq[0]);
+            var rows = getSelectedRows(jq[0]);
             return rows.length > 0 ? rows[0] : null;
         },
         getSelections: function (jq) {
-            return _121(jq[0]);
+            return getSelectedRows(jq[0]);
         },
         clearSelections: function (jq) {
             return jq.each(function () {
-                var _1ee = $.data(this, "datagrid");
-                var _1ef = _1ee.selectedRows;
-                var _1f0 = _1ee.checkedRows;
-                _1ef.splice(0, _1ef.length);
-                _137(this);
-                if (_1ee.options.checkOnSelect) {
-                    _1f0.splice(0, _1f0.length);
+                var state = $.data(this, "datagrid");
+                var selectedRows = state.selectedRows;
+                var checkedRows = state.checkedRows;
+                selectedRows.splice(0, selectedRows.length);
+                unselectAll(this);
+                if (state.options.checkOnSelect) {
+                    checkedRows.splice(0, checkedRows.length);
                 }
             });
         },
         clearChecked: function (jq) {
             return jq.each(function () {
-                var _1f1 = $.data(this, "datagrid");
-                var _1f2 = _1f1.selectedRows;
-                var _1f3 = _1f1.checkedRows;
-                _1f3.splice(0, _1f3.length);
-                _8c(this);
-                if (_1f1.options.selectOnCheck) {
-                    _1f2.splice(0, _1f2.length);
+                var state = $.data(this, "datagrid");
+                var selectedRows = state.selectedRows;
+                var checkedRows = state.checkedRows;
+                checkedRows.splice(0, checkedRows.length);
+                uncheckAll(this);
+                if (state.options.selectOnCheck) {
+                    selectedRows.splice(0, selectedRows.length);
                 }
             });
         },
-        scrollTo: function (jq, _1f4) {
+        scrollTo: function (jq, index) {
             return jq.each(function () {
-                _127(this, _1f4);
+                scrollTo(this, index);
             });
         },
-        highlightRow: function (jq, _1f5) {
+        highlightRow: function (jq, index) {
             return jq.each(function () {
-                _9e(this, _1f5);
-                _127(this, _1f5);
+                highlightRow(this, index);
+                scrollTo(this, index);
             });
         },
         selectAll: function (jq) {
             return jq.each(function () {
-                _13c(this);
+                selectAll(this);
             });
         },
         unselectAll: function (jq) {
             return jq.each(function () {
-                _137(this);
+                unselectAll(this);
             });
         },
-        selectRow: function (jq, _1f6) {
+        selectRow: function (jq, index) {
             return jq.each(function () {
-                _a7(this, _1f6);
+                selectRow(this, index);
             });
         },
         selectRecord: function (jq, id) {
             return jq.each(function () {
                 var opts = $.data(this, "datagrid").options;
                 if (opts.idField) {
-                    var _1f7 = _11e(this, id);
-                    if (_1f7 >= 0) {
-                        $(this).datagrid("selectRow", _1f7);
+                    var index = getRowIndex(this, id);
+                    if (index >= 0) {
+                        $(this).datagrid("selectRow", index);
                     }
                 }
             });
         },
-        unselectRow: function (jq, _1f8) {
+        unselectRow: function (jq, index) {
             return jq.each(function () {
-                _a8(this, _1f8);
+                unselectRow(this, index);
             });
         },
-        checkRow: function (jq, _1f9) {
+        checkRow: function (jq, index) {
             return jq.each(function () {
-                _a4(this, _1f9);
+                checkRow(this, index);
             });
         },
-        uncheckRow: function (jq, _1fa) {
+        uncheckRow: function (jq, index) {
             return jq.each(function () {
-                _a5(this, _1fa);
+                uncheckRow(this, index);
             });
         },
         checkAll: function (jq) {
             return jq.each(function () {
-                _8b(this);
+                checkAll(this);
             });
         },
         uncheckAll: function (jq) {
             return jq.each(function () {
-                _8c(this);
+                uncheckAll(this);
             });
         },
-        beginEdit: function (jq, _1fb) {
+        beginEdit: function (jq, index) {
             return jq.each(function () {
-                _156(this, _1fb);
+                beginEdit(this, index);
             });
         },
-        endEdit: function (jq, _1fc) {
+        endEdit: function (jq, index) {
             return jq.each(function () {
-                _15c(this, _1fc, false);
+                endEdit(this, index, false);
             });
         },
-        cancelEdit: function (jq, _1fd) {
+        cancelEdit: function (jq, index) {
             return jq.each(function () {
-                _15c(this, _1fd, true);
+                endEdit(this, index, true);
             });
         },
-        getEditors: function (jq, _1fe) {
-            return _169(jq[0], _1fe);
+        getEditors: function (jq, index) {
+            return getEditors(jq[0], index);
         },
-        getEditor: function (jq, _1ff) {
-            return _16d(jq[0], _1ff);
+        getEditor: function (jq, param) {
+            return getEditor(jq[0], param);
         },
-        refreshRow: function (jq, _200) {
+        refreshRow: function (jq, index) {
             return jq.each(function () {
                 var opts = $.data(this, "datagrid").options;
-                opts.view.refreshRow.call(opts.view, this, _200);
+                opts.view.refreshRow.call(opts.view, this, index);
             });
         },
-        validateRow: function (jq, _201) {
-            return _15b(jq[0], _201);
+        validateRow: function (jq, index) {
+            return validateRow(jq[0], index);
         },
-        updateRow: function (jq, _202) {
+        updateRow: function (jq, param) {
             return jq.each(function () {
-                _191(this, _202);
+                updateRow(this, param);
             });
         },
         appendRow: function (jq, row) {
             return jq.each(function () {
-                _18e(this, row);
+                appendRow(this, row);
             });
         },
-        insertRow: function (jq, _203) {
+        insertRow: function (jq, param) {
             return jq.each(function () {
-                _18a(this, _203);
+                insertRow(this, param);
             });
         },
-        deleteRow: function (jq, _204) {
+        deleteRow: function (jq, index) {
             return jq.each(function () {
-                _184(this, _204);
+                deleteRow(this, index);
             });
         },
-        getChanges: function (jq, _205) {
-            return _17e(jq[0], _205);
+        getChanges: function (jq, state) {
+            return getChanges(jq[0], state);
         },
         acceptChanges: function (jq) {
             return jq.each(function () {
-                _19b(this);
+                acceptChanges(this);
             });
         },
         rejectChanges: function (jq) {
             return jq.each(function () {
-                _19d(this);
+                rejectChanges(this);
             });
         },
-        mergeCells: function (jq, _206) {
+        mergeCells: function (jq, param) {
             return jq.each(function () {
-                _1af(this, _206);
+                mergeCells(this, param);
             });
         },
-        showColumn: function (jq, _207) {
+        showColumn: function (jq, field) {
             return jq.each(function () {
-                var col = $(this).datagrid("getColumnOption", _207);
+                var col = $(this).datagrid("getColumnOption", field);
                 if (col.hidden) {
                     col.hidden = false;
-                    $(this).datagrid("getPanel").find("td[field=\"" + _207 + "\"]").show();
-                    _c3(this, _207, 1);
+                    $(this).datagrid("getPanel").find("td[field=\"" + field + "\"]").show();
+                    fixColumnSpan(this, field, 1);
                     $(this).datagrid("fitColumns");
                 }
             });
         },
-        hideColumn: function (jq, _208) {
+        hideColumn: function (jq, field) {
             return jq.each(function () {
-                var col = $(this).datagrid("getColumnOption", _208);
+                var col = $(this).datagrid("getColumnOption", field);
                 if (!col.hidden) {
                     col.hidden = true;
-                    $(this).datagrid("getPanel").find("td[field=\"" + _208 + "\"]").hide();
-                    _c3(this, _208, -1);
+                    $(this).datagrid("getPanel").find("td[field=\"" + field + "\"]").hide();
+                    fixColumnSpan(this, field, -1);
                     $(this).datagrid("fitColumns");
                 }
             });
         },
-        sort: function (jq, _209) {
+        sort: function (jq, param) {
             return jq.each(function () {
-                _8e(this, _209);
+                sortGrid(this, param);
             });
         },
-        gotoPage: function (jq, _20a) {
+        gotoPage: function (jq, param) {
             return jq.each(function () {
-                var _20b = this;
+                var target = this;
                 var page, cb;
-                if (typeof _20a == "object") {
-                    page = _20a.page;
-                    cb = _20a.callback;
+                if (typeof param == "object") {
+                    page = param.page;
+                    cb = param.callback;
                 } else {
-                    page = _20a;
+                    page = param;
                 }
-                $(_20b).datagrid("options").pageNumber = page;
-                $(_20b).datagrid("getPager").pagination("refresh", {
+                $(target).datagrid("options").pageNumber = page;
+                $(target).datagrid("getPager").pagination("refresh", {
                     pageNumber: page
                 });
-                request(_20b, null, function () {
+                request(target, null, function () {
                     if (cb) {
-                        cb.call(_20b, page);
+                        cb.call(target, page);
                     }
                 });
             });
         }
     };
-    $.fn.datagrid.parseOptions = function (_20c) {
-        var t = $(_20c);
-        return $.extend({}, $.fn.panel.parseOptions(_20c), $.parser.parseOptions(_20c, ["url", "toolbar", "idField", "sortName", "sortOrder", "pagePosition", "resizeHandle", {
+    $.fn.datagrid.parseOptions = function (target) {
+        var t = $(target);
+        return $.extend({}, $.fn.panel.parseOptions(target), $.parser.parseOptions(target, ["url", "toolbar", "idField", "sortName", "sortOrder", "pagePosition", "resizeHandle", {
             sharedStyleSheet: "boolean",
             fitColumns: "boolean",
             autoRowHeight: "boolean",
@@ -2578,111 +2662,111 @@
             rowStyler: (t.attr("rowStyler") ? eval(t.attr("rowStyler")) : undefined)
         });
     };
-    $.fn.datagrid.parseData = function (_20d) {
-        var t = $(_20d);
+    $.fn.datagrid.parseData = function (target) {
+        var t = $(target);
         var data = {
             total: 0,
             rows: []
         };
-        var _20e = t.datagrid("getColumnFields", true).concat(t.datagrid("getColumnFields", false));
+        var fields = t.datagrid("getColumnFields", true).concat(t.datagrid("getColumnFields", false));
         t.find("tbody tr").each(function () {
             data.total++;
             var row = {};
             $.extend(row, $.parser.parseOptions(this, ["iconCls", "state"]));
-            for (var i = 0; i < _20e.length; i++) {
-                row[_20e[i]] = $(this).find("td:eq(" + i + ")").html();
+            for (var i = 0; i < fields.length; i++) {
+                row[fields[i]] = $(this).find("td:eq(" + i + ")").html();
             }
             data.rows.push(row);
         });
         return data;
     };
-    var _20f = {
-        render: function (_210, _211, _212) {
-            var rows = $(_210).datagrid("getRows");
-            $(_211).empty().html(this.renderTable(_210, 0, rows, _212));
+    var defaultView = {
+        render: function (target, container, frozen) {
+            var rows = $(target).datagrid("getRows");
+            $(container).empty().html(this.renderTable(target, 0, rows, frozen));
         },
-        renderFooter: function (_213, _214, _215) {
-            var opts = $.data(_213, "datagrid").options;
-            var rows = $.data(_213, "datagrid").footer || [];
-            var _216 = $(_213).datagrid("getColumnFields", _215);
-            var _217 = ["<table class=\"datagrid-ftable\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody>"];
+        renderFooter: function (target, container, frozen) {
+            // var opts = $.data(target, "datagrid").options;
+            var rows = $.data(target, "datagrid").footer || [];
+            var fields = $(target).datagrid("getColumnFields", frozen);
+            var table = ["<table class=\"datagrid-ftable\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody>"];
             for (var i = 0; i < rows.length; i++) {
-                _217.push("<tr class=\"datagrid-row\" datagrid-row-index=\"" + i + "\">");
-                _217.push(this.renderRow.call(this, _213, _216, _215, i, rows[i]));
-                _217.push("</tr>");
+                table.push("<tr class=\"datagrid-row\" datagrid-row-index=\"" + i + "\">");
+                table.push(this.renderRow.call(this, target, fields, frozen, i, rows[i]));
+                table.push("</tr>");
             }
-            _217.push("</tbody></table>");
-            $(_214).html(_217.join(""));
+            table.push("</tbody></table>");
+            $(container).html(table.join(""));
         },
-        renderTable: function (_218, _219, rows, _21a) {
-            var _21b = $.data(_218, "datagrid");
-            var opts = _21b.options;
-            if (_21a) {
+        renderTable: function (target, index, rows, frozen) {
+            var state = $.data(target, "datagrid");
+            var opts = state.options;
+            if (frozen) {
                 if (!(opts.rownumbers || (opts.frozenColumns && opts.frozenColumns.length))) {
                     return "";
                 }
             }
-            var _21c = $(_218).datagrid("getColumnFields", _21a);
-            var _21d = ["<table class=\"datagrid-btable\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody>"];
+            var fields = $(target).datagrid("getColumnFields", frozen);
+            var table = ["<table class=\"datagrid-btable\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody>"];
             for (var i = 0; i < rows.length; i++) {
                 var row = rows[i];
-                var css = opts.rowStyler ? opts.rowStyler.call(_218, _219, row) : "";
+                var css = opts.rowStyler ? opts.rowStyler.call(target, index, row) : "";
                 var cs = this.getStyleValue(css);
-                var cls = "class=\"datagrid-row " + (_219 % 2 && opts.striped ? "datagrid-row-alt " : " ") + cs.c + "\"";
-                var _21e = cs.s ? "style=\"" + cs.s + "\"" : "";
-                var _21f = _21b.rowIdPrefix + "-" + (_21a ? 1 : 2) + "-" + _219;
-                _21d.push("<tr id=\"" + _21f + "\" datagrid-row-index=\"" + _219 + "\" " + cls + " " + _21e + ">");
-                _21d.push(this.renderRow.call(this, _218, _21c, _21a, _219, row));
-                _21d.push("</tr>");
-                _219++;
+                var cls = "class=\"datagrid-row " + (index % 2 && opts.striped ? "datagrid-row-alt " : " ") + cs.c + "\"";
+                var style = cs.s ? "style=\"" + cs.s + "\"" : "";
+                var rowId = state.rowIdPrefix + "-" + (frozen ? 1 : 2) + "-" + index;
+                table.push("<tr id=\"" + rowId + "\" datagrid-row-index=\"" + index + "\" " + cls + " " + style + ">");
+                table.push(this.renderRow.call(this, target, fields, frozen, index, row));
+                table.push("</tr>");
+                index++;
             }
-            _21d.push("</tbody></table>");
-            return _21d.join("");
+            table.push("</tbody></table>");
+            return table.join("");
         },
-        renderRow: function (_220, _221, _222, _223, _224) {
-            var opts = $.data(_220, "datagrid").options;
+        renderRow: function (target, fields, frozen, rowIndex, rowData) {
+            var opts = $.data(target, "datagrid").options;
             var cc = [];
-            if (_222 && opts.rownumbers) {
-                var _225 = _223 + 1;
+            if (frozen && opts.rownumbers) {
+                var rownumber = rowIndex + 1;
                 if (opts.pagination) {
-                    _225 += (opts.pageNumber - 1) * opts.pageSize;
+                    rownumber += (opts.pageNumber - 1) * opts.pageSize;
                 }
-                cc.push("<td class=\"datagrid-td-rownumber\"><div class=\"datagrid-cell-rownumber\">" + _225 + "</div></td>");
+                cc.push("<td class=\"datagrid-td-rownumber\"><div class=\"datagrid-cell-rownumber\">" + rownumber + "</div></td>");
             }
-            for (var i = 0; i < _221.length; i++) {
-                var _226 = _221[i];
-                var col = $(_220).datagrid("getColumnOption", _226);
+            for (var i = 0; i < fields.length; i++) {
+                var field = fields[i];
+                var col = $(target).datagrid("getColumnOption", field);
                 if (col) {
-                    var _227 = _224[_226];
-                    var css = col.styler ? (col.styler.call(_220, _227, _224, _223) || "") : "";
+                    var value = rowData[field];
+                    var css = col.styler ? (col.styler.call(target, value, rowData, rowIndex) || "") : "";
                     var cs = this.getStyleValue(css);
                     var cls = cs.c ? "class=\"" + cs.c + "\"" : "";
-                    var _228 = col.hidden ? "style=\"display:none;" + cs.s + "\"" : (cs.s ? "style=\"" + cs.s + "\"" : "");
-                    cc.push("<td field=\"" + _226 + "\" " + cls + " " + _228 + ">");
-                    var _228 = "";
+                    var style = col.hidden ? "style=\"display:none;" + cs.s + "\"" : (cs.s ? "style=\"" + cs.s + "\"" : "");
+                    cc.push("<td field=\"" + field + "\" " + cls + " " + style + ">");
+                    var style = "";
                     if (!col.checkbox) {
                         if (col.align) {
-                            _228 += "text-align:" + col.align + ";";
+                            style += "text-align:" + col.align + ";";
                         }
                         if (!opts.nowrap) {
-                            _228 += "white-space:normal;height:auto;";
+                            style += "white-space:normal;height:auto;";
                         } else {
                             if (opts.autoRowHeight) {
-                                _228 += "height:auto;";
+                                style += "height:auto;";
                             }
                         }
                     }
-                    cc.push("<div style=\"" + _228 + "\" ");
+                    cc.push("<div style=\"" + style + "\" ");
                     cc.push(col.checkbox ? "class=\"datagrid-cell-check\"" : "class=\"datagrid-cell " + col.cellClass + "\"");
                     cc.push(">");
                     if (col.checkbox) {
-                        cc.push("<input type=\"checkbox\" " + (_224.checked ? "checked=\"checked\"" : ""));
-                        cc.push(" name=\"" + _226 + "\" value=\"" + (_227 != undefined ? _227 : "") + "\">");
+                        cc.push("<input type=\"checkbox\" " + (rowData.checked ? "checked=\"checked\"" : ""));
+                        cc.push(" name=\"" + field + "\" value=\"" + (value != undefined ? value : "") + "\">");
                     } else {
                         if (col.formatter) {
-                            cc.push(col.formatter(_227, _224, _223));
+                            cc.push(col.formatter(value, rowData, rowIndex));
                         } else {
-                            cc.push(_227);
+                            cc.push(value);
                         }
                     }
                     cc.push("</div>");
@@ -2692,79 +2776,79 @@
             return cc.join("");
         },
         getStyleValue: function (css) {
-            var _229 = "";
-            var _22a = "";
+            var classValue = "";
+            var styleValue = "";
             if (typeof css == "string") {
-                _22a = css;
+                styleValue = css;
             } else {
                 if (css) {
-                    _229 = css["class"] || "";
-                    _22a = css["style"] || "";
+                    classValue = css["class"] || "";
+                    styleValue = css["style"] || "";
                 }
             }
             return {
-                c: _229,
-                s: _22a
+                c: classValue,
+                s: styleValue
             };
         },
-        refreshRow: function (_22b, _22c) {
-            this.updateRow.call(this, _22b, _22c, {});
+        refreshRow: function (target, rowIndex) {
+            this.updateRow.call(this, target, rowIndex, {});
         },
-        updateRow: function (_22d, _22e, row) {
-            var opts = $.data(_22d, "datagrid").options;
-            var _22f = opts.finder.getRow(_22d, _22e);
-            $.extend(_22f, row);
-            var cs = _230.call(this, _22e);
-            var _231 = cs.s;
-            var cls = "datagrid-row " + (_22e % 2 && opts.striped ? "datagrid-row-alt " : " ") + cs.c;
+        updateRow: function (target, rowIndex, row) {
+            var opts = $.data(target, "datagrid").options;
+            var rowData = opts.finder.getRow(target, rowIndex);
+            $.extend(rowData, row);
+            var cs = _getRowStyle.call(this, rowIndex);
+            var style = cs.s;
+            var cls = "datagrid-row " + (rowIndex % 2 && opts.striped ? "datagrid-row-alt " : " ") + cs.c;
 
-            function _230(_232) {
-                var css = opts.rowStyler ? opts.rowStyler.call(_22d, _232, _22f) : "";
+            function _getRowStyle(rowIndex) {
+                var css = opts.rowStyler ? opts.rowStyler.call(target, rowIndex, rowData) : "";
                 return this.getStyleValue(css);
             };
 
-            function _233(_234) {
-                var tr = opts.finder.getTr(_22d, _22e, "body", (_234 ? 1 : 2));
+            function _update(frozen) {
+                var tr = opts.finder.getTr(target, rowIndex, "body", (frozen ? 1 : 2));
                 if (!tr.length) {
                     return;
                 }
-                var _235 = $(_22d).datagrid("getColumnFields", _234);
-                var _236 = tr.find("div.datagrid-cell-check input[type=checkbox]").is(":checked");
-                tr.html(this.renderRow.call(this, _22d, _235, _234, _22e, _22f));
-                var _237 = (tr.hasClass("datagrid-row-checked") ? " datagrid-row-checked" : "") + (tr.hasClass("datagrid-row-selected") ? " datagrid-row-selected" : "");
-                tr.attr("style", _231).attr("class", cls + _237);
-                if (_236) {
+                var fields = $(target).datagrid("getColumnFields", frozen);
+                var checked = tr.find("div.datagrid-cell-check input[type=checkbox]").is(":checked");
+                tr.html(this.renderRow.call(this, target, fields, frozen, rowIndex, rowData));
+                var cls12 = (tr.hasClass("datagrid-row-checked") ? " datagrid-row-checked" : "") + (tr.hasClass("datagrid-row-selected") ? " datagrid-row-selected" : "");
+                tr.attr("style", style).attr("class", cls + cls12);
+                if (checked) {
                     tr.find("div.datagrid-cell-check input[type=checkbox]")._propAttr("checked", true);
                 }
             };
-            _233.call(this, true);
-            _233.call(this, false);
-            $(_22d).datagrid("fixRowHeight", _22e);
+            _update.call(this, true);
+            _update.call(this, false);
+            $(target).datagrid("fixRowHeight", rowIndex);
         },
-        insertRow: function (_238, _239, row) {
-            var _23a = $.data(_238, "datagrid");
-            var opts = _23a.options;
-            var dc = _23a.dc;
-            var data = _23a.data;
-            if (_239 == undefined || _239 == null) {
-                _239 = data.rows.length;
+        insertRow: function (target, index, row) {
+            var state = $.data(target, "datagrid");
+            var opts = state.options;
+            var dc = state.dc;
+            var data = state.data;
+            if (index == undefined || index == null) {
+                index = data.rows.length;
             }
-            if (_239 > data.rows.length) {
-                _239 = data.rows.length;
+            if (index > data.rows.length) {
+                index = data.rows.length;
             }
 
-            function _23b(_23c) {
-                var _23d = _23c ? 1 : 2;
-                for (var i = data.rows.length - 1; i >= _239; i--) {
-                    var tr = opts.finder.getTr(_238, i, "body", _23d);
+            function _incIndex(frozen) {
+                var serno = frozen ? 1 : 2;
+                for (var i = data.rows.length - 1; i >= index; i--) {
+                    var tr = opts.finder.getTr(target, i, "body", serno);
                     tr.attr("datagrid-row-index", i + 1);
-                    tr.attr("id", _23a.rowIdPrefix + "-" + _23d + "-" + (i + 1));
-                    if (_23c && opts.rownumbers) {
-                        var _23e = i + 2;
+                    tr.attr("id", state.rowIdPrefix + "-" + serno + "-" + (i + 1));
+                    if (frozen && opts.rownumbers) {
+                        var indexOfArray3e = i + 2;
                         if (opts.pagination) {
-                            _23e += (opts.pageNumber - 1) * opts.pageSize;
+                            indexOfArray3e += (opts.pageNumber - 1) * opts.pageSize;
                         }
-                        tr.find("div.datagrid-cell-rownumber").html(_23e);
+                        tr.find("div.datagrid-cell-rownumber").html(indexOfArray3e);
                     }
                     if (opts.striped) {
                         tr.removeClass("datagrid-row-alt").addClass((i + 1) % 2 ? "datagrid-row-alt" : "");
@@ -2772,107 +2856,107 @@
                 }
             };
 
-            function _23f(_240) {
-                var _241 = _240 ? 1 : 2;
-                var _242 = $(_238).datagrid("getColumnFields", _240);
-                var _243 = _23a.rowIdPrefix + "-" + _241 + "-" + _239;
-                var tr = "<tr id=\"" + _243 + "\" class=\"datagrid-row\" datagrid-row-index=\"" + _239 + "\"></tr>";
-                if (_239 >= data.rows.length) {
+            function _insert(frozen) {
+                var serno = frozen ? 1 : 2;
+                // var indexOfArray42 = $(target).datagrid("getColumnFields", frozen);
+                var rowId = state.rowIdPrefix + "-" + serno + "-" + index;
+                var tr = "<tr id=\"" + rowId + "\" class=\"datagrid-row\" datagrid-row-index=\"" + index + "\"></tr>";
+                if (index >= data.rows.length) {
                     if (data.rows.length) {
-                        opts.finder.getTr(_238, "", "last", _241).after(tr);
+                        opts.finder.getTr(target, "", "last", serno).after(tr);
                     } else {
-                        var cc = _240 ? dc.body1 : dc.body2;
+                        var cc = frozen ? dc.body1 : dc.body2;
                         cc.html("<table class=\"datagrid-btable\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody>" + tr + "</tbody></table>");
                     }
                 } else {
-                    opts.finder.getTr(_238, _239 + 1, "body", _241).before(tr);
+                    opts.finder.getTr(target, index + 1, "body", serno).before(tr);
                 }
             };
-            _23b.call(this, true);
-            _23b.call(this, false);
-            _23f.call(this, true);
-            _23f.call(this, false);
+            _incIndex.call(this, true);
+            _incIndex.call(this, false);
+            _insert.call(this, true);
+            _insert.call(this, false);
             data.total += 1;
-            data.rows.splice(_239, 0, row);
-            this.setEmptyMsg(_238);
-            this.refreshRow.call(this, _238, _239);
+            data.rows.splice(index, 0, row);
+            this.setEmptyMsg(target);
+            this.refreshRow.call(this, target, index);
         },
-        deleteRow: function (_244, _245) {
-            var _246 = $.data(_244, "datagrid");
-            var opts = _246.options;
-            var data = _246.data;
+        deleteRow: function (target, index) {
+            var state = $.data(target, "datagrid");
+            var opts = state.options;
+            var data = state.data;
 
-            function _247(_248) {
-                var _249 = _248 ? 1 : 2;
-                for (var i = _245 + 1; i < data.rows.length; i++) {
-                    var tr = opts.finder.getTr(_244, i, "body", _249);
+            function _decIndex(frozen) {
+                var serno = frozen ? 1 : 2;
+                for (var i = index + 1; i < data.rows.length; i++) {
+                    var tr = opts.finder.getTr(target, i, "body", serno);
                     tr.attr("datagrid-row-index", i - 1);
-                    tr.attr("id", _246.rowIdPrefix + "-" + _249 + "-" + (i - 1));
-                    if (_248 && opts.rownumbers) {
-                        var _24a = i;
+                    tr.attr("id", state.rowIdPrefix + "-" + serno + "-" + (i - 1));
+                    if (frozen && opts.rownumbers) {
+                        var rownumber = i;
                         if (opts.pagination) {
-                            _24a += (opts.pageNumber - 1) * opts.pageSize;
+                            rownumber += (opts.pageNumber - 1) * opts.pageSize;
                         }
-                        tr.find("div.datagrid-cell-rownumber").html(_24a);
+                        tr.find("div.datagrid-cell-rownumber").html(rownumber);
                     }
                     if (opts.striped) {
                         tr.removeClass("datagrid-row-alt").addClass((i - 1) % 2 ? "datagrid-row-alt" : "");
                     }
                 }
             };
-            opts.finder.getTr(_244, _245).remove();
-            _247.call(this, true);
-            _247.call(this, false);
+            opts.finder.getTr(target, index).remove();
+            _decIndex.call(this, true);
+            _decIndex.call(this, false);
             data.total -= 1;
-            data.rows.splice(_245, 1);
-            this.setEmptyMsg(_244);
+            data.rows.splice(index, 1);
+            this.setEmptyMsg(target);
         },
-        onBeforeRender: function (_24b, rows) {},
-        onAfterRender: function (_24c) {
-            var _24d = $.data(_24c, "datagrid");
-            var opts = _24d.options;
+        onBeforeRender: function (target, rows) {},
+        onAfterRender: function (target) {
+            var state = $.data(target, "datagrid");
+            var opts = state.options;
             if (opts.showFooter) {
-                var _24e = $(_24c).datagrid("getPanel").find("div.datagrid-footer");
-                _24e.find("div.datagrid-cell-rownumber,div.datagrid-cell-check").css("visibility", "hidden");
+                var footer = $(target).datagrid("getPanel").find("div.datagrid-footer");
+                footer.find("div.datagrid-cell-rownumber,div.datagrid-cell-check").css("visibility", "hidden");
             }
-            this.setEmptyMsg(_24c);
+            this.setEmptyMsg(target);
         },
-        setEmptyMsg: function (_24f) {
-            var _250 = $.data(_24f, "datagrid");
-            var opts = _250.options;
-            var _251 = opts.finder.getRows(_24f).length == 0;
-            if (_251) {
-                this.renderEmptyRow(_24f);
+        setEmptyMsg: function (target) {
+            var state = $.data(target, "datagrid");
+            var opts = state.options;
+            var isEmpty = opts.finder.getRows(target).length == 0;
+            if (isEmpty) {
+                this.renderEmptyRow(target);
             }
             if (opts.emptyMsg) {
-                _250.dc.view.children(".datagrid-empty").remove();
-                if (_251) {
-                    var h = _250.dc.header2.parent().outerHeight();
-                    var d = $("<div class=\"datagrid-empty\"></div>").appendTo(_250.dc.view);
+                state.dc.view.children(".datagrid-empty").remove();
+                if (isEmpty) {
+                    var h = state.dc.header2.parent().outerHeight();
+                    var d = $("<div class=\"datagrid-empty\"></div>").appendTo(state.dc.view);
                     d.html(opts.emptyMsg).css("top", h + "px");
                 }
             }
         },
-        renderEmptyRow: function (_252) {
-            var opts = $(_252).datagrid("options");
-            var cols = $.map($(_252).datagrid("getColumnFields"), function (_253) {
-                return $(_252).datagrid("getColumnOption", _253);
+        renderEmptyRow: function (target) {
+            var opts = $(target).datagrid("options");
+            var cols = $.map($(target).datagrid("getColumnFields"), function (field) {
+                return $(target).datagrid("getColumnOption", field);
             });
             $.map(cols, function (col) {
                 col.formatter1 = col.formatter;
                 col.styler1 = col.styler;
                 col.formatter = col.styler = undefined;
             });
-            var _254 = opts.rowStyler;
+            var rowStyler = opts.rowStyler;
             opts.rowStyler = function () {};
-            var _255 = $.data(_252, "datagrid").dc.body2;
-            _255.html(this.renderTable(_252, 0, [{}], false));
-            _255.find("tbody *").css({
+            var body2 = $.data(target, "datagrid").dc.body2;
+            body2.html(this.renderTable(target, 0, [{}], false));
+            body2.find("tbody *").css({
                 height: 1,
                 borderColor: "transparent",
                 background: "transparent"
             });
-            var tr = _255.find(".datagrid-row");
+            var tr = body2.find(".datagrid-row");
             tr.removeClass("datagrid-row").removeAttr("datagrid-row-index");
             tr.find(".datagrid-cell,.datagrid-cell-check").empty();
             $.map(cols, function (col) {
@@ -2880,7 +2964,7 @@
                 col.styler = col.styler1;
                 col.formatter1 = col.styler1 = undefined;
             });
-            opts.rowStyler = _254;
+            opts.rowStyler = rowStyler;
         }
     };
     $.fn.datagrid.defaults = $.extend({}, $.fn.panel.defaults, {
@@ -2922,21 +3006,21 @@
         rownumberWidth: 30,
         editorHeight: 31,
         headerEvents: {
-            mouseover: _84(true),
-            mouseout: _84(false),
-            click: _88,
-            dblclick: _8f,
-            contextmenu: _95
+            mouseover: headerOverEventHandler(true),
+            mouseout: headerOverEventHandler(false),
+            click: headerClickEventHandler,
+            dblclick: headerDblclickEventHandler,
+            contextmenu: headerMenuEventHandler
         },
         rowEvents: {
-            mouseover: _98(true),
-            mouseout: _98(false),
-            click: _a0,
-            dblclick: _ab,
-            contextmenu: _b0
+            mouseover: hoverEventHandler(true),
+            mouseout: hoverEventHandler(false),
+            click: clickEventHandler,
+            dblclick: dblclickEventHandler,
+            contextmenu: contextmenuEventHandler
         },
-        rowStyler: function (_256, _257) {},
-        loader: function (_258, _259, _25a) {
+        rowStyler: function (rowIndex, rowData) {},
+        loader: function (param, success, error) {
             var opts = $(this).datagrid("options");
             if (!opts.url) {
                 return false;
@@ -2944,13 +3028,13 @@
             $.ajax({
                 type: opts.method,
                 url: opts.url,
-                data: _258,
+                data: param,
                 dataType: "json",
                 success: function (data) {
-                    _259(data);
+                    success(data);
                 },
                 error: function () {
-                    _25a.apply(this, arguments);
+                    error.apply(this, arguments);
                 }
             });
         },
@@ -2959,47 +3043,47 @@
         },
         editors: editors,
         finder: {
-            getTr: function (_25b, _25c, type, _25d) {
+            getTr: function (target, index, type, serno) {
                 type = type || "body";
-                _25d = _25d || 0;
-                var _25e = $.data(_25b, "datagrid");
-                var dc = _25e.dc;
-                var opts = _25e.options;
-                if (_25d == 0) {
-                    var tr1 = opts.finder.getTr(_25b, _25c, type, 1);
-                    var tr2 = opts.finder.getTr(_25b, _25c, type, 2);
+                serno = serno || 0;
+                var state = $.data(target, "datagrid");
+                var dc = state.dc;
+                var opts = state.options;
+                if (serno == 0) {
+                    var tr1 = opts.finder.getTr(target, index, type, 1);
+                    var tr2 = opts.finder.getTr(target, index, type, 2);
                     return tr1.add(tr2);
                 } else {
                     if (type == "body") {
-                        var tr = $("#" + _25e.rowIdPrefix + "-" + _25d + "-" + _25c);
+                        var tr = $("#" + state.rowIdPrefix + "-" + serno + "-" + index);
                         if (!tr.length) {
-                            tr = (_25d == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr[datagrid-row-index=" + _25c + "]");
+                            tr = (serno == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr[datagrid-row-index=" + index + "]");
                         }
                         return tr;
                     } else {
                         if (type == "footer") {
-                            return (_25d == 1 ? dc.footer1 : dc.footer2).find(">table>tbody>tr[datagrid-row-index=" + _25c + "]");
+                            return (serno == 1 ? dc.footer1 : dc.footer2).find(">table>tbody>tr[datagrid-row-index=" + index + "]");
                         } else {
                             if (type == "selected") {
-                                return (_25d == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr.datagrid-row-selected");
+                                return (serno == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr.datagrid-row-selected");
                             } else {
                                 if (type == "highlight") {
-                                    return (_25d == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr.datagrid-row-over");
+                                    return (serno == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr.datagrid-row-over");
                                 } else {
                                     if (type == "checked") {
-                                        return (_25d == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr.datagrid-row-checked");
+                                        return (serno == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr.datagrid-row-checked");
                                     } else {
                                         if (type == "editing") {
-                                            return (_25d == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr.datagrid-row-editing");
+                                            return (serno == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr.datagrid-row-editing");
                                         } else {
                                             if (type == "last") {
-                                                return (_25d == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr[datagrid-row-index]:last");
+                                                return (serno == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr[datagrid-row-index]:last");
                                             } else {
                                                 if (type == "allbody") {
-                                                    return (_25d == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr[datagrid-row-index]");
+                                                    return (serno == 1 ? dc.body1 : dc.body2).find(">table>tbody>tr[datagrid-row-index]");
                                                 } else {
                                                     if (type == "allfooter") {
-                                                        return (_25d == 1 ? dc.footer1 : dc.footer2).find(">table>tbody>tr[datagrid-row-index]");
+                                                        return (serno == 1 ? dc.footer1 : dc.footer2).find(">table>tbody>tr[datagrid-row-index]");
                                                     }
                                                 }
                                             }
@@ -3011,43 +3095,43 @@
                     }
                 }
             },
-            getRow: function (_25f, p) {
-                var _260 = (typeof p == "object") ? p.attr("datagrid-row-index") : p;
-                return $.data(_25f, "datagrid").data.rows[parseInt(_260)];
+            getRow: function (target, p) {
+                var index = (typeof p == "object") ? p.attr("datagrid-row-index") : p;
+                return $.data(target, "datagrid").data.rows[parseInt(index)];
             },
-            getRows: function (_261) {
-                return $(_261).datagrid("getRows");
+            getRows: function (target) {
+                return $(target).datagrid("getRows");
             }
         },
-        view: _20f,
-        onBeforeLoad: function (_262) {},
+        view: defaultView,
+        onBeforeLoad: function (param) {},
         onLoadSuccess: function () {},
         onLoadError: function () {},
-        onClickRow: function (_263, _264) {},
-        onDblClickRow: function (_265, _266) {},
-        onClickCell: function (_267, _268, _269) {},
-        onDblClickCell: function (_26a, _26b, _26c) {},
-        onBeforeSortColumn: function (sort, _26d) {},
-        onSortColumn: function (sort, _26e) {},
-        onResizeColumn: function (_26f, _270) {},
-        onBeforeSelect: function (_271, _272) {},
-        onSelect: function (_273, _274) {},
-        onBeforeUnselect: function (_275, _276) {},
-        onUnselect: function (_277, _278) {},
+        onClickRow: function (rowIndex, rowData) {},
+        onDblClickRow: function (rowIndex, rowData) {},
+        onClickCell: function (rowIndex, field, value) {},
+        onDblClickCell: function (rowIndex, field, value) {},
+        onBeforeSortColumn: function (sort, order) {},
+        onSortColumn: function (sort, order) {},
+        onResizeColumn: function (field, width) {},
+        onBeforeSelect: function (rowIndex, rowData) {},
+        onSelect: function (rowIndex, rowData) {},
+        onBeforeUnselect: function (rowIndex, rowData) {},
+        onUnselect: function (rowIndex, rowData) {},
         onSelectAll: function (rows) {},
         onUnselectAll: function (rows) {},
-        onBeforeCheck: function (_279, _27a) {},
-        onCheck: function (_27b, _27c) {},
-        onBeforeUncheck: function (_27d, _27e) {},
-        onUncheck: function (_27f, _280) {},
+        onBeforeCheck: function (rowIndex, rowData) {},
+        onCheck: function (rowIndex, rowData) {},
+        onBeforeUncheck: function (rowIndex, rowData) {},
+        onUncheck: function (rowIndex, rowData) {},
         onCheckAll: function (rows) {},
         onUncheckAll: function (rows) {},
-        onBeforeEdit: function (_281, _282) {},
-        onBeginEdit: function (_283, _284) {},
-        onEndEdit: function (_285, _286, _287) {},
-        onAfterEdit: function (_288, _289, _28a) {},
-        onCancelEdit: function (_28b, _28c) {},
-        onHeaderContextMenu: function (e, _28d) {},
-        onRowContextMenu: function (e, _28e, _28f) {}
+        onBeforeEdit: function (rowIndex, rowData) {},
+        onBeginEdit: function (rowIndex, rowData) {},
+        onEndEdit: function (rowIndex, rowData, changes) {},
+        onAfterEdit: function (rowIndex, rowData, changes) {},
+        onCancelEdit: function (rowIndex, rowData) {},
+        onHeaderContextMenu: function (e, field) {},
+        onRowContextMenu: function (e, rowIndex, rowData) {}
     });
 })(jQuery);
