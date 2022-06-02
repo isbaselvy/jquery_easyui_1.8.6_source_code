@@ -632,11 +632,13 @@
             var stv = $(this).scrollTop();
             $(this).scrollTop(stv);
             b1.scrollTop(stv);
+            // datagrid-body-inner 表格全部行内容
             var c1 = dc.body1.children(":first");
             var c2 = dc.body2.children(":first");
             if (c1.length && c2.length) {
                 var _82 = c1.offset().top;
                 var _83 = c2.offset().top;
+                // 对齐冻结列的竖向滚动高度
                 if (_82 != _83) {
                     b1.scrollTop(b1.scrollTop() + _82 - _83);
                 }
@@ -1421,11 +1423,13 @@
     };
 
     function scrollTo(target, index) {
+        debugger
         var state = $.data(target, "datagrid");
         var dc = state.dc;
         var opts = state.options;
         var tr = opts.finder.getTr(target, index);
         if (tr.length) {
+            // 指定索引是冻结的行则不滚动（冻结行置顶的）
             if (tr.closest("table").hasClass("datagrid-btable-frozen")) {
                 return;
             }
@@ -1433,18 +1437,66 @@
             var headerHeight = dc.view2.children("div.datagrid-header")._outerHeight();
             var body2 = dc.body2;
             var scrollbarSize = opts.scrollbarSize;
-            // 没有滚动条
+            // 如果没有横向滚动条，scrollbarSize = 0
             if (body2[0].offsetHeight && body2[0].clientHeight && body2[0].offsetHeight <= body2[0].clientHeight) {
                 scrollbarSize = 0;
             }
-            // 冻结行高度
+            // 冻结行的高度
             var frozenHeight = body2.outerHeight(true) - body2.outerHeight();
-            // tr元素的offsetTop
             var top = tr.offset().top - dc.view2.offset().top - headerHeight - frozenHeight;
             if (top < 0) {
+                // 向上滚动
                 body2.scrollTop(body2.scrollTop() + top);
             } else {
+                // 向下滚动 top+tr高>tbody高则代表不在表格可见区域内
                 if (top + tr._outerHeight() > body2.height() - scrollbarSize) {
+                    // 滚动到表格底部可见，相当于元素刚刚进入表格底部可见
+                    body2.scrollTop(body2.scrollTop() + top + tr._outerHeight() - body2.height() + scrollbarSize);
+                }
+            }
+        }
+    };
+
+    /**
+     * 滚动到指定列
+     * 场景：多行合并，空数据，footer，冻结列多
+     * 冻结列多，按冻结行处理，不滚动
+     * 因滚动条是在view2，所以列在view2中则做滚动处理
+     * @param {*} target 
+     * @param {*} field 
+     * @returns 
+     */
+    function scrollToCol(target, field) {
+        var state = $.data(target, "datagrid");
+        var dc = state.dc;
+        var opts = state.options;
+        var view2 = dc.view2
+        var header2 = view2.children("div.datagrid-header");
+        var table2 = header2.find("table");
+        var th = table2.find("th[field='"+ field + "']")
+        if (tr.length) {
+            // 指定索引是冻结的行则不滚动（冻结行置顶的）
+            if (tr.closest("table").hasClass("datagrid-btable-frozen")) {
+                return;
+            }
+            // 表头th高度
+            var headerHeight = dc.view2.children("div.datagrid-header")._outerHeight();
+            var body2 = dc.body2;
+            var scrollbarSize = opts.scrollbarSize;
+            // 如果没有横向滚动条，scrollbarSize = 0
+            if (body2[0].offsetHeight && body2[0].clientHeight && body2[0].offsetHeight <= body2[0].clientHeight) {
+                scrollbarSize = 0;
+            }
+            // 冻结行的高度
+            var frozenHeight = body2.outerHeight(true) - body2.outerHeight();
+            var top = tr.offset().top - dc.view2.offset().top - headerHeight - frozenHeight;
+            if (top < 0) {
+                // 向上滚动
+                body2.scrollTop(body2.scrollTop() + top);
+            } else {
+                // 向下滚动 top+tr高>tbody高则代表不在表格可见区域内
+                if (top + tr._outerHeight() > body2.height() - scrollbarSize) {
+                    // 滚动到表格底部可见，相当于元素刚刚进入表格底部可见
                     body2.scrollTop(body2.scrollTop() + top + tr._outerHeight() - body2.height() + scrollbarSize);
                 }
             }
